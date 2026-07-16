@@ -45,13 +45,25 @@ Delivered in two increments to keep each plan reviewable:
   `aws organizations enable-aws-service-access --service-principal cloudtrail.amazonaws.com`
   (Terraform does not auto-enable it, see ADR-0004 consequences)
 
-**2b, AWS Config (follow-up):**
-- Per-account recorder + delivery channel (via account provider aliases) →
-  central bucket; **organization aggregator** in `security`
-- Behind `enable_config` (the heaviest cost driver); reviewed as its own plan
+**2b, AWS Config (`terraform/config`, done):**
+- Per-account recorder + delivery channel in all 5 accounts, via a per-account
+  provider alias and a small `modules/account-config` module; records all
+  resource types incl. global
+- Dedicated central Config bucket in `security`, **SSE-S3** (Config delivers from
+  five accounts; a KMS bucket would need each account's Config in the key
+  policy, SSE-S3 avoids that while staying encrypted at rest)
+- **Organization aggregator** in `security` (delegated admin +
+  `AWSConfigRoleForOrganizations` role)
+
+Deployment note: registering the Config delegated administrator
+(`config-multiaccountsetup.amazonaws.com`) is honored by Organizations instantly
+but takes **~10-30 min to propagate into AWS Config**, so aggregator creation
+fails with `OrganizationAccessDeniedException` until it does. A `time_sleep`
+helps but isn't always enough; the aggregator is simply retried until it takes.
 
 Verify: `aws cloudtrail get-trail-status` (`IsLogging: true`), object landing in
-the bucket, later `aws configservice describe-configuration-aggregators`.
+the bucket, `aws configservice describe-configuration-recorder-status`,
+`aws configservice describe-configuration-aggregators`.
 
 ## Step 3: `terraform/security` (done, home region only)
 
