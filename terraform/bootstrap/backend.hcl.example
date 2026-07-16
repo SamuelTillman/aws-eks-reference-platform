@@ -1,0 +1,8 @@
+# Copy to backend.hcl (gitignored) and fill in your state bucket name.
+# The bucket is created by this same stack on its first (local-state) apply;
+# read it from `terraform output state_bucket`. It embeds your management
+# account ID, which is why it lives here and not in versions.tf.
+#
+# Initialize/migrate with:
+#   terraform init -backend-config=backend.hcl -migrate-state
+bucket = "refplatform-tf-state-<MGMT_ACCOUNT_ID>"

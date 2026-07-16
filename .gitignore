@@ -8,6 +8,9 @@
 *.tfplan
 crash.log
 
+# Backend config: holds the account-specific state bucket name (see *.example)
+backend.hcl
+
 # Editors / OS
 .vscode/
 .idea/

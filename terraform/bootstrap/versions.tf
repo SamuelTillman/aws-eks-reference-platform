@@ -8,16 +8,17 @@ terraform {
     }
   }
 
-  # After first apply, uncomment and run `terraform init -migrate-state`.
+  # Partial backend config: the account-specific `bucket` is supplied at init
+  # time from a gitignored backend.hcl (see backend.hcl.example), so no account
+  # ID lands in version control. Initialize with:
+  #   terraform init -backend-config=backend.hcl
   # S3 native locking (use_lockfile): no DynamoDB table needed on TF >= 1.10.
-  #
-  # backend "s3" {
-  #   bucket       = "refplatform-tf-state-<MGMT_ACCOUNT_ID>"
-  #   key          = "bootstrap/terraform.tfstate"
-  #   region       = "us-east-1"
-  #   use_lockfile = true
-  #   encrypt      = true
-  # }
+  backend "s3" {
+    key          = "bootstrap/terraform.tfstate"
+    region       = "us-east-1"
+    use_lockfile = true
+    encrypt      = true
+  }
 }
 
 provider "aws" {
