@@ -5,6 +5,10 @@ the identity / logging / security foundation. Deferred workstreams
 (networking + CI/CD, data pipeline, Bedrock RAG) are tracked in ADR-0004 and get
 their own plans.
 
+> Every non-trivial deployment issue and its fix is logged in
+> [docs/layer1-issues.md](layer1-issues.md), read it before re-running these
+> stacks or forking.
+
 ## Build order (dependency-driven)
 
 | Step | Stack | Blast radius | Why this order |

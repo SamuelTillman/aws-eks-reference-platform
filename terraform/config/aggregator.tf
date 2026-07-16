@@ -3,17 +3,29 @@
 # resource configuration across all accounts and regions.
 # -----------------------------------------------------------------------------
 
-# Delegate Config multi-account setup to the security account.
+# Delegate AWS Config to the security account. Creating an organization
+# aggregator from the delegated admin requires registration under BOTH service
+# principals: config-multiaccountsetup.amazonaws.com AND config.amazonaws.com.
+# Registering only the former fails PutConfigurationAggregator with
+# OrganizationAccessDeniedException, the aggregator's delegated-admin check
+# looks for config.amazonaws.com specifically.
 resource "aws_organizations_delegated_administrator" "config" {
   account_id        = local.security_account_id
   service_principal = "config-multiaccountsetup.amazonaws.com"
 }
 
-# The delegated-admin registration is eventually consistent; the aggregator's
-# PutConfigurationAggregator checks it and fails if called too soon. Wait for
-# the registration to propagate.
+resource "aws_organizations_delegated_administrator" "config_service" {
+  account_id        = local.security_account_id
+  service_principal = "config.amazonaws.com"
+}
+
+# Small buffer for the delegated-admin registrations to settle before the
+# aggregator's PutConfigurationAggregator call.
 resource "time_sleep" "config_delegated_admin" {
-  depends_on      = [aws_organizations_delegated_administrator.config]
+  depends_on = [
+    aws_organizations_delegated_administrator.config,
+    aws_organizations_delegated_administrator.config_service,
+  ]
   create_duration = "60s"
 }
 
