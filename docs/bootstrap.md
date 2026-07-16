@@ -47,11 +47,21 @@ The state backend can't store its own state remotely on the first run. Bootstrap
 
 ```bash
 cd terraform/bootstrap
+cp terraform.tfvars.example terraform.tfvars   # then edit values
 terraform init
 terraform apply          # creates state bucket plus GitHub OIDC provider and role
-# then migrate state into the bucket it just created:
-terraform init -migrate-state
+
+# The bucket name embeds your account ID, so it's supplied out-of-band (never
+# committed). Copy the example, fill in the bucket from `terraform output`:
+cp backend.hcl.example backend.hcl             # set bucket = <state bucket>
+terraform init -backend-config=backend.hcl -migrate-state
 ```
+
+> **Why `-backend-config`?** The state bucket name contains your management
+> account ID, and this is a public repo. `versions.tf` keeps only non-sensitive
+> backend settings; the `bucket` lives in a gitignored `backend.hcl`. See
+> ADR-0003. Every `terraform init` in either stack needs the
+> `-backend-config=backend.hcl` flag.
 
 ## 7. Everything else is code
 

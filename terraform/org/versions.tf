@@ -8,14 +8,16 @@ terraform {
     }
   }
 
-  # Fill in after bootstrap creates the bucket:
-  # backend "s3" {
-  #   bucket       = "refplatform-tf-state-<MGMT_ACCOUNT_ID>"
-  #   key          = "org/terraform.tfstate"
-  #   region       = "us-east-1"
-  #   use_lockfile = true
-  #   encrypt      = true
-  # }
+  # Partial backend config: the account-specific `bucket` is supplied at init
+  # time from a gitignored backend.hcl (see backend.hcl.example), so no account
+  # ID lands in version control. Initialize with:
+  #   terraform init -backend-config=backend.hcl
+  backend "s3" {
+    key          = "org/terraform.tfstate"
+    region       = "us-east-1"
+    use_lockfile = true
+    encrypt      = true
+  }
 }
 
 provider "aws" {

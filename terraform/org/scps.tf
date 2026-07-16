@@ -65,19 +65,25 @@ resource "aws_organizations_policy" "region_allowlist" {
   content     = data.aws_iam_policy_document.region_allowlist.json
 }
 
-# 3. Deny members leaving the organization
+# 3. Deny members leaving the organization or self-closing their account.
+#    Supersedes the console-created "DenyLeaveAndCloseAccount" SCP (attached to
+#    Root during bootstrap), which was removed so this managed policy is the
+#    single, in-code source of truth for both controls. See ADR-0003.
 data "aws_iam_policy_document" "deny_leave_org" {
   statement {
-    sid       = "DenyLeaveOrganization"
-    effect    = "Deny"
-    actions   = ["organizations:LeaveOrganization"]
+    sid    = "DenyLeaveAndCloseAccount"
+    effect = "Deny"
+    actions = [
+      "organizations:LeaveOrganization",
+      "account:CloseAccount",
+    ]
     resources = ["*"]
   }
 }
 
 resource "aws_organizations_policy" "deny_leave_org" {
-  name        = "deny-leave-org"
-  description = "Member accounts cannot remove themselves from the org"
+  name        = "deny-leave-and-close"
+  description = "Member accounts cannot leave the org or close themselves"
   content     = data.aws_iam_policy_document.deny_leave_org.json
 }
 

@@ -1,0 +1,8 @@
+# Copy to backend.hcl (gitignored) and fill in your state bucket name.
+# Same bucket the bootstrap stack created; read it from the bootstrap stack's
+# `terraform output state_bucket`. It embeds your management account ID, which
+# is why it lives here and not in versions.tf.
+#
+# Initialize with:
+#   terraform init -backend-config=backend.hcl
+bucket = "refplatform-tf-state-<MGMT_ACCOUNT_ID>"

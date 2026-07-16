@@ -32,3 +32,4 @@ Want the background on the format? See Michael Nygard's original write-up:
 |---|----------|--------|
 | [0001](0001-why-this-platform-exists.md) | Why this platform exists | Accepted |
 | [0002](0002-raw-organizations-over-control-tower.md) | Raw AWS Organizations + Terraform over Control Tower | Accepted |
+| [0003](0003-layer-0-deployment-decisions.md) | Layer 0 deployment decisions (region, backend, CI, SCP reconciliation) | Accepted |
