@@ -34,16 +34,24 @@ and confirm assignments resolve in the Identity Center console.
 
 ## Step 2: `terraform/logging`
 
+Delivered in two increments to keep each plan reviewable:
+
+**2a, CloudTrail audit backbone (done):**
 - **Org CloudTrail** (`is_organization_trail = true`) in management, management
   events only by default (data events opt-in via `enable_data_events`)
 - **Central log bucket** in `security`: KMS-encrypted, versioned, public access
-  blocked, bucket policy scoped to the org trail + `aws:SourceOrgID`
-- **AWS Config:** per-account recorder + delivery channel (via account provider
-  aliases) → central bucket; **organization aggregator** in `security`
-- Cost gates: `enable_config` (heaviest), `enable_data_events`
+  blocked, bucket policy scoped to the org trail via `aws:SourceArn`
+- **Prerequisite:** CloudTrail trusted access enabled once with
+  `aws organizations enable-aws-service-access --service-principal cloudtrail.amazonaws.com`
+  (Terraform does not auto-enable it, see ADR-0004 consequences)
 
-Verify: `aws cloudtrail get-trail-status`, object landing in the bucket,
-`aws configservice describe-configuration-aggregators`.
+**2b, AWS Config (follow-up):**
+- Per-account recorder + delivery channel (via account provider aliases) →
+  central bucket; **organization aggregator** in `security`
+- Behind `enable_config` (the heaviest cost driver); reviewed as its own plan
+
+Verify: `aws cloudtrail get-trail-status` (`IsLogging: true`), object landing in
+the bucket, later `aws configservice describe-configuration-aggregators`.
 
 ## Step 3: `terraform/security`
 

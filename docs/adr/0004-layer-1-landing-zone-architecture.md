@@ -158,6 +158,15 @@ human access path; no IAM users are introduced.
   in the plan.
 - Enabling Config across all accounts is the largest cost and resource driver;
   it is the most likely knob to turn off for a dormant platform.
-- This ADR is **Proposed**. It moves to **Accepted** when Layer 1 foundation
-  implementation begins; deferred workstreams (networking/CI-CD, data, RAG) will
-  each land as their own numbered ADR.
+- **Organization trusted access must be enabled imperatively.** Terraform's
+  `CreateTrail` does *not* auto-enable CloudTrail service access the way the
+  console does, so org-service enablement (`aws organizations
+  enable-aws-service-access --service-principal <svc>`) is a prerequisite run
+  once per service, CloudTrail now, GuardDuty/Security Hub/Config/Access
+  Analyzer in the `security` stack. There is no clean standalone Terraform
+  resource for it (the only native path is the `aws_organizations_organization`
+  singleton, which the `org` stack intentionally reads via a data source rather
+  than manages). This is tracked as a candidate to fold into the `org` stack
+  later; for now it is documented alongside each stack.
+- Deferred workstreams (networking/CI-CD, data, RAG) will each land as their own
+  numbered ADR when built.

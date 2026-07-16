@@ -1,0 +1,10 @@
+aws_region  = "us-east-1"
+name_prefix = "refplatform"
+
+# The remote-state bucket (embeds your management account ID). Same value as
+# your backend.hcl bucket. Kept out of git via .gitignore.
+state_bucket = "refplatform-tf-state-<MGMT_ACCOUNT_ID>"
+
+# Opt-in knobs (see variables.tf):
+enable_data_events = false
+force_destroy_logs = true
