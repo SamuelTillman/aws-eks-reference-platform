@@ -1,0 +1,9 @@
+aws_region      = "us-east-1"
+allowed_regions = ["us-east-1", "us-east-2"]
+
+account_emails = {
+  security        = "you+aws-security@yourdomain.com"
+  shared_services = "you+aws-shared@yourdomain.com"
+  workloads_dev   = "you+aws-dev@yourdomain.com"
+  workloads_prod  = "you+aws-prod@yourdomain.com"
+}

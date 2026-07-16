@@ -1,0 +1,47 @@
+name: Terraform Plan
+
+on:
+  pull_request:
+    paths:
+      - "terraform/**"
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # OIDC token for AWS
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        stack: [bootstrap, org]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC, no stored keys)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform fmt
+        working-directory: terraform/${{ matrix.stack }}
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        working-directory: terraform/${{ matrix.stack }}
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        working-directory: terraform/${{ matrix.stack }}
+        run: terraform validate
+
+      - name: Terraform plan
+        working-directory: terraform/${{ matrix.stack }}
+        run: terraform plan -input=false -no-color
