@@ -1,6 +1,7 @@
 # Terraform
 .terraform/
-.terraform.lock.hcl
+# .terraform.lock.hcl is committed on purpose (pinned provider versions +
+# checksums for reproducible builds across dev and CI). See ADR-0003.
 *.tfstate
 *.tfstate.*
 *.tfvars
