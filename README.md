@@ -20,7 +20,7 @@ A forkable reference implementation of an AWS organization hosting a Kubernetes 
 2. **Everything is code.** The only manual steps are the unavoidable bootstrap that creates the organization, documented honestly in [docs/bootstrap.md](docs/bootstrap.md).
 3. **Forkable by design.** Account IDs, domains, and values specific to your org are variables. Fork it, set your values, deploy your own.
 4. **Costs stay capped.** Spot capacity, scale to zero, and a documented destroy and rebuild flow. If it can't be rebuilt from this repo, it doesn't belong in this repo.
-5. **Decisions are documented.** See [docs/adr/](docs/adr/) for why things are the way they are.
+5. **Decisions are documented.** Every significant choice gets an Architecture Decision Record (ADR), a short note explaining what we decided and why. New to the concept? Start with [docs/adr/](docs/adr/), which explains the format and indexes every decision.
 
 ## Account architecture
 
