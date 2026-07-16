@@ -1,0 +1,10 @@
+aws_region  = "us-east-1"
+name_prefix = "refplatform"
+
+# The remote-state bucket (embeds your management account ID). Same value as
+# your backend.hcl bucket. Kept out of git via .gitignore.
+state_bucket = "refplatform-tf-state-<MGMT_ACCOUNT_ID>"
+
+# Identity Center usernames to add to platform-admins (e.g. your SSO admin).
+# Leave empty to manage group membership by hand.
+platform_admin_usernames = []
