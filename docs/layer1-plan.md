@@ -53,16 +53,30 @@ Delivered in two increments to keep each plan reviewable:
 Verify: `aws cloudtrail get-trail-status` (`IsLogging: true`), object landing in
 the bucket, later `aws configservice describe-configuration-aggregators`.
 
-## Step 3: `terraform/security`
+## Step 3: `terraform/security` (done, home region only)
 
 - **GuardDuty:** delegate admin → `security`; detector + org auto-enable (`ALL`)
-- **Security Hub:** delegate admin → `security`; enable AWS FSBP + CIS standards;
-  org auto-enable
+- **Security Hub:** delegate admin → `security`; FSBP + CIS 1.4 standards; org
+  auto-enable. `enable_default_standards = false` (ignore_changes) so fresh
+  builds skip the legacy CIS 1.2.0 auto-subscription
 - **IAM Access Analyzer:** `ORGANIZATION` analyzer in `security`
 - Cost gates: `enable_guardduty`, `enable_securityhub`
 
-Verify: `aws guardduty list-detectors`, `aws securityhub get-enabled-standards`,
-`aws accessanalyzer list-analyzers`.
+Deployment notes / gotchas encountered:
+- **Pre-enable trusted access** for `guardduty`, `securityhub`, `access-analyzer`
+  service principals (imperative, same as CloudTrail, ADR-0004).
+- **Access Analyzer** org analyzer needs the service-linked role in BOTH the
+  delegated-admin and the **management** account; the management SLR is managed
+  explicitly (`aws_iam_service_linked_role`) with a `time_sleep` for IAM
+  propagation before the analyzer is created.
+- Security Hub auto-enabled a stray **CIS 1.2.0** default; disabled out-of-band
+  and prevented on rebuild via `enable_default_standards = false`.
+
+**Follow-up:** multi-region coverage (`us-east-2`, in the region allowlist) needs
+per-region providers, deferred.
+
+Verify: `aws guardduty list-detectors`, `aws securityhub get-enabled-standards`
+(FSBP + CIS 1.4 only), `aws accessanalyzer list-analyzers`.
 
 ## Cost table (us-east-1, order-of-magnitude, for a dormant reference platform)
 
