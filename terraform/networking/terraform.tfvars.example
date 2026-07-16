@@ -1,0 +1,8 @@
+aws_region  = "us-east-1"
+name_prefix = "refplatform"
+
+# The remote-state bucket (embeds your management account ID). Same value as
+# your backend.hcl bucket. Kept out of git via .gitignore.
+state_bucket = "refplatform-tf-state-<MGMT_ACCOUNT_ID>"
+
+azs = ["us-east-1a", "us-east-1b", "us-east-1c"]

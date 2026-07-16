@@ -16,3 +16,6 @@ backend.hcl
 .vscode/
 .idea/
 .DS_Store
+
+# Local blog drafts, staged here but never published to the public repo
+blog/
