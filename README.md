@@ -10,7 +10,7 @@ A forkable reference implementation of an AWS organization hosting a Kubernetes 
 |-------|-------|--------|
 | 0 | Org bootstrap: accounts, OUs, SCPs, state backend, GitHub OIDC | ✅ Complete |
 | 1 | Landing zone: identity, logging, security tooling, networking, CI/CD | ✅ Complete |
-| 2 | EKS platform: Cilium, mesh, Prometheus/OpenTelemetry, ArgoCD, Kyverno, Backstage | Planned |
+| 2 | EKS platform: Cilium, mesh, Prometheus/OpenTelemetry, ArgoCD, Kyverno, Backstage | 🚧 In progress, dev cluster foundation ([ADR-0007](docs/adr/0007-eks-cluster-foundation.md)) |
 | 3 | GPU/AI serving: GPU Operator, MIG, vLLM | Planned |
 | 4 | Sample workload: fishing-charter SaaS + data pipeline + Bedrock RAG service | Planned |
 | 5 | Architecture docs: full ADR log, threat model, FinOps dashboard | Planned |

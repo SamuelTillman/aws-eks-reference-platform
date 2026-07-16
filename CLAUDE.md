@@ -70,6 +70,7 @@ Flat under `terraform/`, one state key per stack (all in the one S3 bucket):
 | `security` | `security/terraform.tfstate` | GuardDuty/Security Hub/Access Analyzer (delegated to security) *(Layer 1, done)* |
 | `cicd` | `cicd/terraform.tfstate` | per-account OIDC deploy roles + central ECR *(Layer 1, done)* |
 | `networking` | `networking/terraform.tfstate` | TGW centralized-egress hub, VPCs, flow logs (cross-account) *(Layer 1, done)* |
+| `eks` | `eks/terraform.tfstate` | dev EKS cluster: API-auth access entries, Pod Identity, managed add-ons, system node group (in `workloads-dev`) *(Layer 2, scaffolded, not yet deployed)* |
 
 ## Cross-account model (Layer 1+)
 

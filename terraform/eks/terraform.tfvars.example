@@ -1,0 +1,33 @@
+aws_region  = "us-east-1"
+name_prefix = "refplatform"
+
+# The remote-state bucket (embeds your management account ID). Same value as
+# your backend.hcl bucket. Kept out of git via .gitignore.
+state_bucket = "refplatform-tf-state-<MGMT_ACCOUNT_ID>"
+
+# Pin the EKS minor version; upgrades are deliberate, plan-reviewed changes.
+cluster_version = "1.31"
+
+# --- API endpoint access (ADR-0007 decision 4) ------------------------------
+# Private access is always on. Add your admin egress IP (/32) to reach the
+# public endpoint while iterating. Empty = no public access at all.
+public_access_cidrs = ["203.0.113.10/32"]
+
+# --- Cluster admins via EKS access entries (API auth mode) ------------------
+# The Terraform creator (assumed OrganizationAccountAccessRole) is admin
+# automatically. Add the admin SSO permission-set role and the CI/CD deploy
+# role here. Use the *_ARNs as they resolve in workloads-dev.
+cluster_admin_principal_arns = [
+  # "arn:aws:iam::<WORKLOADS_DEV_ACCOUNT_ID>:role/aws-reserved/sso.amazonaws.com/<REGION>/AWSReservedSSO_AdministratorAccess_xxxx",
+  # "arn:aws:iam::<WORKLOADS_DEV_ACCOUNT_ID>:role/refplatform-deploy",
+]
+
+# --- System node group ------------------------------------------------------
+node_instance_types = ["t3.large"]
+node_capacity_type  = "ON_DEMAND"
+node_desired_size   = 2
+node_min_size       = 2
+node_max_size       = 4
+
+# --- Cost knob --------------------------------------------------------------
+enable_control_plane_logs = true

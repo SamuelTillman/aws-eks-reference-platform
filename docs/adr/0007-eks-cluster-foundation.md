@@ -2,8 +2,10 @@
 
 **Status:** Accepted · **Date:** 2026-07
 
-> **Implementation status:** Not built yet. This ADR scopes the **first Layer 2
-> increment**, a single working EKS cluster in `workloads-dev` that later
+> **Implementation status:** Scaffolded in `terraform/eks`, not yet deployed
+> (`validate` passes; no `apply` has run, standing cost is still zero). This ADR
+> scopes the **first Layer 2 increment**, a single working EKS cluster in
+> `workloads-dev` that later
 > increments (Cilium, GitOps, observability, policy, Backstage) build on. Each of
 > those is its own ADR/increment; this one deliberately stops at "a cluster you
 > can deploy to."
