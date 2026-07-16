@@ -34,3 +34,4 @@ Want the background on the format? See Michael Nygard's original write-up:
 | [0002](0002-raw-organizations-over-control-tower.md) | Raw AWS Organizations + Terraform over Control Tower | Accepted |
 | [0003](0003-layer-0-deployment-decisions.md) | Layer 0 deployment decisions (region, backend, CI, SCP reconciliation) | Accepted |
 | [0004](0004-layer-1-landing-zone-architecture.md) | Layer 1 landing zone architecture (cross-account model, delegated admin, identity) | Accepted |
+| [0005](0005-cicd-foundation.md) | CI/CD foundation, per-account OIDC deploy roles, central ECR, prod approval gate | Accepted |

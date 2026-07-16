@@ -1,0 +1,12 @@
+aws_region  = "us-east-1"
+name_prefix = "refplatform"
+
+# The remote-state bucket (embeds your management account ID). Same value as
+# your backend.hcl bucket. Kept out of git via .gitignore.
+state_bucket = "refplatform-tf-state-<MGMT_ACCOUNT_ID>"
+
+github_org  = "your-github-username"
+github_repo = "aws-eks-reference-platform"
+
+# Demo workload image repos (change to your services):
+ecr_repositories = ["charter-api", "charter-frontend", "charter-jobs"]
