@@ -2,12 +2,12 @@
 
 **Status:** Accepted · **Date:** 2026-07
 
-> **Implementation status:** The core topology is deployed, 3 VPCs, centralized
-> per-AZ NAT, the Transit Gateway hub, all attachments, and full dev/prod
-> segmentation routing. Two elements below are **deferred to a follow-up
-> increment** and not yet in code: **VPC Flow Logs** (§Observability) and the
-> **interface endpoints** for ECR/STS/CloudWatch Logs (§Private AWS connectivity;
-> gateway endpoints for S3/DynamoDB *are* deployed).
+> **Implementation status:** Deployed, 3 VPCs, centralized per-AZ NAT, the
+> Transit Gateway hub, all attachments, full dev/prod segmentation routing,
+> gateway endpoints (S3/DynamoDB), and **VPC Flow Logs** to a dedicated archive
+> (see §Observability). **Interface endpoints** (ECR/STS/CloudWatch Logs) are
+> implemented but **off by default** (`enable_interface_endpoints = false`), a
+> flat hourly per-AZ cost that's only needed once EKS nodes run in Layer 2.
 
 ## Context
 
@@ -77,9 +77,16 @@ private subnets for the TGW attachment.
 
 ### Observability
 
-**VPC Flow Logs** from every VPC → the central log archive in the `security`
-account (the Layer 1 logging bucket), extending the audit backbone to the network
-layer.
+**VPC Flow Logs** (`traffic_type = ALL`) from every VPC → a **dedicated
+flow-logs bucket in the `security` account**, KMS-encrypted with its own CMK and
+lifecycle-expired (default 90d). This centralizes flow logs in `security` and
+extends the audit backbone, but deliberately **is not** the CloudTrail audit
+bucket: routing workload-sourced logs there would require granting the workload
+accounts write access to the tamper-isolated audit trail, undercutting
+[ADR-0004](0004-layer-1-landing-zone-architecture.md) §5. The bucket policy and
+CMK grant delivery only to `delivery.logs.amazonaws.com`, scoped by
+`aws:SourceAccount` to the three network accounts. Toggleable via
+`enable_flow_logs`.
 
 ### EKS-readiness
 

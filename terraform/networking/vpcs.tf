@@ -7,28 +7,36 @@ module "vpc_egress" {
   source    = "./modules/vpc"
   providers = { aws = aws.shared_services }
 
-  name                = "${var.name_prefix}-egress"
-  cidr_block          = local.cidrs.egress
-  azs                 = var.azs
-  create_nat_gateways = true
+  name                     = "${var.name_prefix}-egress"
+  cidr_block               = local.cidrs.egress
+  azs                      = var.azs
+  create_nat_gateways      = true
+  enable_flow_logs         = var.enable_flow_logs
+  flow_log_destination_arn = one(aws_s3_bucket.flow_logs[*].arn)
 }
 
 module "vpc_dev" {
   source    = "./modules/vpc"
   providers = { aws = aws.workloads_dev }
 
-  name            = "${var.name_prefix}-dev"
-  cidr_block      = local.cidrs.dev
-  azs             = var.azs
-  eks_cluster_tag = "${var.name_prefix}-dev"
+  name                       = "${var.name_prefix}-dev"
+  cidr_block                 = local.cidrs.dev
+  azs                        = var.azs
+  eks_cluster_tag            = "${var.name_prefix}-dev"
+  enable_interface_endpoints = var.enable_interface_endpoints
+  enable_flow_logs           = var.enable_flow_logs
+  flow_log_destination_arn   = one(aws_s3_bucket.flow_logs[*].arn)
 }
 
 module "vpc_prod" {
   source    = "./modules/vpc"
   providers = { aws = aws.workloads_prod }
 
-  name            = "${var.name_prefix}-prod"
-  cidr_block      = local.cidrs.prod
-  azs             = var.azs
-  eks_cluster_tag = "${var.name_prefix}-prod"
+  name                       = "${var.name_prefix}-prod"
+  cidr_block                 = local.cidrs.prod
+  azs                        = var.azs
+  eks_cluster_tag            = "${var.name_prefix}-prod"
+  enable_interface_endpoints = var.enable_interface_endpoints
+  enable_flow_logs           = var.enable_flow_logs
+  flow_log_destination_arn   = one(aws_s3_bucket.flow_logs[*].arn)
 }

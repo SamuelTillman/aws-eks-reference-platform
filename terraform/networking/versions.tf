@@ -57,3 +57,15 @@ provider "aws" {
   }
   default_tags { tags = local.default_tags }
 }
+
+# Security account: owns the central VPC flow-logs archive (bucket + KMS key).
+# Kept separate from the CloudTrail audit bucket so workload accounts never gain
+# write access to the tamper-isolated audit trail (ADR-0004 §5, ADR-0006).
+provider "aws" {
+  alias  = "security"
+  region = var.aws_region
+  assume_role {
+    role_arn = "arn:aws:iam::${data.terraform_remote_state.org.outputs.account_ids["security"]}:role/OrganizationAccountAccessRole"
+  }
+  default_tags { tags = local.default_tags }
+}

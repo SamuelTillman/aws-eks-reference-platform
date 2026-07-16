@@ -22,3 +22,8 @@ output "vpc_cidrs" {
 output "transit_gateway_id" {
   value = aws_ec2_transit_gateway.this.id
 }
+
+output "flow_logs_bucket" {
+  description = "Central VPC flow-logs bucket (security account); null when flow logs are disabled"
+  value       = one(aws_s3_bucket.flow_logs[*].bucket)
+}
