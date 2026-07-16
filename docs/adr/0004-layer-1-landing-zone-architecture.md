@@ -32,12 +32,20 @@ patterns; heavier workstreams get their own ADRs.
 - **Centralized security**, GuardDuty, Security Hub, and IAM Access Analyzer,
   organization-enabled via delegated administration to `security`
 
-**Deferred to their own ADRs/efforts (still Layer 1, built later):**
-- **Shared-services networking + CI/CD**, VPC hub, ECR, cross-account deploy
-  roles (ADR-0005, planned)
-- **Data pipeline** (ADR-0006, planned)
+**Landing-zone workstreams, deferred here, since built:**
+- **CI/CD foundation**, per-account OIDC deploy roles + central ECR (ADR-0005, done)
+- **Shared-services networking**, Transit Gateway hub, VPCs, flow logs (ADR-0006, done)
+
+**Re-tiered out of Layer 1, workload, not landing zone (see the README roadmap):**
+- **Data pipeline**, ingest → embeddings → vector store (future ADR)
 - **Bedrock RAG service**, effectively a full application; knowledge base +
-  vector store + retrieval API (ADR-0007, planned)
+  vector store + retrieval API (future ADR)
+
+> **Erratum (2026-07):** This list originally tagged all four as "still Layer 1"
+> and mis-referenced ADR numbers (networking is ADR-0006, not the data pipeline).
+> Corrected above, CI/CD (ADR-0005) and networking (ADR-0006) are landing-zone
+> and now built; the data pipeline and RAG service moved to the sample-workload
+> layer, consistent with the rationale below.
 
 Rationale: the identity/logging/security triad is the true "landing zone", it
 is low-risk, high-leverage, and a prerequisite for everything above it. The RAG

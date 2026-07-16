@@ -62,11 +62,14 @@ Flat under `terraform/`, one state key per stack (all in the one S3 bucket):
 
 | Stack | Key | Scope |
 |---|---|---|
-| `bootstrap` | `bootstrap/terraform.tfstate` | state bucket + GitHub OIDC (mgmt) |
-| `org` | `org/terraform.tfstate` | OUs, member accounts, SCPs (mgmt) |
-| `identity` | `identity/terraform.tfstate` | Identity Center permission sets/groups/assignments (mgmt) |
-| `logging` | `logging/terraform.tfstate` | org CloudTrail + central logs + Config *(Layer 1, in progress)* |
-| `security` | `security/terraform.tfstate` | GuardDuty/Security Hub/Access Analyzer *(Layer 1, planned)* |
+| `bootstrap` | `bootstrap/terraform.tfstate` | state bucket + GitHub OIDC (mgmt) *(Layer 0, done)* |
+| `org` | `org/terraform.tfstate` | OUs, member accounts, SCPs (mgmt) *(Layer 0, done)* |
+| `identity` | `identity/terraform.tfstate` | Identity Center permission sets/groups/assignments (mgmt) *(Layer 1, done)* |
+| `logging` | `logging/terraform.tfstate` | org CloudTrail + central log archive (mgmt + security) *(Layer 1, done)* |
+| `config` | `config/terraform.tfstate` | org-wide AWS Config recorders + aggregator (delegated to security) *(Layer 1, done)* |
+| `security` | `security/terraform.tfstate` | GuardDuty/Security Hub/Access Analyzer (delegated to security) *(Layer 1, done)* |
+| `cicd` | `cicd/terraform.tfstate` | per-account OIDC deploy roles + central ECR *(Layer 1, done)* |
+| `networking` | `networking/terraform.tfstate` | TGW centralized-egress hub, VPCs, flow logs (cross-account) *(Layer 1, done)* |
 
 ## Cross-account model (Layer 1+)
 
