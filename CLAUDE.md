@@ -32,9 +32,11 @@ EKS → GPU/AI), built in layers. See [README.md](README.md) for the layer map a
 
 - Local runs authenticate via SSO: prefix Terraform with `AWS_PROFILE=refplatform-mgmt`
   (management account, `AdministratorAccess` via SSO).
-- CI authenticates via the `refplatform-github-actions` OIDC role (repo variable
-  `AWS_ROLE_ARN`). The plan workflow is `.github/workflows/terraform-plan.yml`
-  (plan-only). It reads the state bucket from repo **secret** `TF_STATE_BUCKET`
+- CI authenticates via the `refplatform-github-actions` OIDC role (repo **secret**
+  `AWS_ROLE_ARN`, a secret not a variable: the ARN embeds the mgmt account ID and
+  GitHub echoes action inputs, so a secret masks it in the public log). The plan
+  workflow is `.github/workflows/terraform-plan.yml` (plan-only). It reads the
+  state bucket from repo **secret** `TF_STATE_BUCKET`
   (not a variable, the bucket embeds the mgmt account ID, and a secret keeps it
   out of git *and* masks it in the public run logs). The workflow also
   `::add-mask::`es every org account ID before `plan` so ARNs don't leak into

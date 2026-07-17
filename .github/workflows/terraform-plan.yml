@@ -92,7 +92,10 @@ jobs:
       - name: Configure AWS credentials (OIDC, no stored keys)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          # Secret, not a variable: the ARN embeds the mgmt account ID, and GitHub
+          # echoes action inputs in the log. A secret masks it as *** in the
+          # public run log (a variable would print the account ID in clear text).
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Mask account IDs in logs
