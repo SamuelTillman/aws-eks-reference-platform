@@ -24,8 +24,10 @@ in a separate increment.
 
 ## Decision
 
-Harden in the layer that owns each control. This ADR covers the five P0s; the
-permission-boundary work is deferred to its own increment.
+Harden in the layer that owns each control. This ADR covers the five
+must-fix items numbered in the Context above (the highest-priority audit and
+security gaps from the review); the permission-boundary work is deferred to its
+own increment.
 
 ### 1. Audit-protection SCP (`org/scps.tf`)
 

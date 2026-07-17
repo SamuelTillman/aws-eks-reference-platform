@@ -22,7 +22,7 @@ variable "enable_data_events" {
 }
 
 variable "force_destroy_logs" {
-  description = "Allow the log bucket to be destroyed with objects present. True keeps the reference platform fully destroyable/rebuildable."
+  description = "Allow the audit-log bucket to be destroyed with objects present. Default false: the audit trail should not be casually deletable, and this is the safety prerequisite for S3 Object Lock (ADR-0009). Set true only for a deliberate full teardown."
   type        = bool
-  default     = true
+  default     = false
 }

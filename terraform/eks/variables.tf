@@ -27,6 +27,12 @@ variable "public_access_cidrs" {
   description = "CIDRs allowed to reach the public API endpoint. Private access is always on; keep this tight (your admin egress IP). Empty means no public access."
   type        = list(string)
   default     = []
+
+  # Guard against opening the API server to the world (ADR-0009).
+  validation {
+    condition     = !contains(var.public_access_cidrs, "0.0.0.0/0")
+    error_message = "public_access_cidrs must not include 0.0.0.0/0; that would expose the EKS API server to the entire internet."
+  }
 }
 
 # --- Access entries (ADR-0007: API auth mode) -------------------------------
