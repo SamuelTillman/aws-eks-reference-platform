@@ -46,3 +46,17 @@ have to rediscover any of these. See also
 - **Prevention:** forkers whose accounts emit immutable subjects set those two
   vars; the plain form remains the default.
 - **Status:** fixed (bootstrap re-applied; trust now matches the immutable sub).
+
+## 3. plan CI: bootstrap stack fails on missing required variable (fixed)
+
+- **Where:** `plan` job, `bootstrap` stack (surfaced when the OIDC fix touched
+  `terraform/bootstrap`, so `discover` added it to the matrix).
+- **Symptom:** `Error: No value for required variable` for `github_org`.
+- **Root cause:** `terraform.tfvars` is gitignored, so CI has no value for
+  bootstrap's required `github_org` (and the immutable-ID vars).
+- **Fix:** the `plan` job exports the GitHub identity from the Actions context
+  as `TF_VAR_github_org` / `github_repo` / `github_owner_id` / `github_repo_id`
+  (`github.repository_owner`, `github.event.repository.name`,
+  `github.repository_owner_id`, `github.repository_id`). Forkable and always
+  matches the running repo; undeclared `TF_VAR_*` are ignored by other stacks.
+- **Status:** fixed.
