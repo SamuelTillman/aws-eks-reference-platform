@@ -89,6 +89,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # TEMP DIAGNOSTIC: print the OIDC token's claims (not the token) to see the
+      # real `sub`/`aud` the role trust must match. Remove once the assume works.
+      - name: Debug OIDC claims (temporary)
+        run: |
+          payload=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | jq -r .value | cut -d. -f2)
+          l=$(( ${#payload} % 4 )); [ $l -eq 2 ] && payload="${payload}=="; [ $l -eq 3 ] && payload="${payload}="
+          echo "$payload" | tr '_-' '/+' | base64 -d 2>/dev/null \
+            | jq '{sub, aud, repository, repository_owner, ref, workflow_ref}'
+
       - name: Configure AWS credentials (OIDC, no stored keys)
         uses: aws-actions/configure-aws-credentials@v4
         with:
