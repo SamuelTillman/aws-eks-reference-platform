@@ -1,5 +1,12 @@
 name: Terraform Plan
 
+# Plan-only CI (never applies, see CLAUDE.md hard rules). On a *public* repo the
+# run logs are world-readable, so this workflow deliberately hides two things:
+#   - the state bucket name (embeds the mgmt account ID) -> repo SECRET, auto-masked
+#   - account IDs in plan output -> registered as ::add-mask:: before plan runs
+# fmt/validate run for every PR (incl. forks, no creds). plan runs only for
+# same-repo PRs, which are the only ones that can obtain the secret + OIDC role.
+
 on:
   pull_request:
     paths:
@@ -7,40 +14,113 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write   # OIDC token for AWS
   contents: read
 
 env:
   AWS_REGION: us-east-1
 
 jobs:
-  plan:
+  # Which stacks changed in this PR? (workflow_dispatch -> all of them.) Keeps the
+  # matrix from going stale as stacks are added.
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      stacks: ${{ steps.set.outputs.stacks }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: set
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            stacks=$(git diff --name-only '${{ github.event.pull_request.base.sha }}' HEAD -- 'terraform/**' \
+                     | awk -F/ 'NF>2 && $1=="terraform" {print $2}' | sort -u)
+          else
+            stacks=$(find terraform -maxdepth 2 -name versions.tf -printf '%h\n' \
+                     | awk -F/ '{print $2}' | sort -u)
+          fi
+          json=$(printf '%s' "$stacks" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "stacks=$json" >> "$GITHUB_OUTPUT"
+          echo "Selected stacks: $json"
+
+  # No credentials, no backend: runs for every PR including forks. Catches
+  # formatting and config errors without touching AWS or the state bucket.
+  validate:
+    needs: discover
+    if: needs.discover.outputs.stacks != '[]'
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        stack: [bootstrap, org]
+        stack: ${{ fromJson(needs.discover.outputs.stacks) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - name: Terraform fmt
+        working-directory: terraform/${{ matrix.stack }}
+        run: terraform fmt -check -recursive
+      - name: Terraform init (no backend)
+        working-directory: terraform/${{ matrix.stack }}
+        run: terraform init -backend=false -input=false
+      - name: Terraform validate
+        working-directory: terraform/${{ matrix.stack }}
+        run: terraform validate
+
+  # Real plan against AWS. Only same-repo PRs (or manual dispatch) reach here,
+  # fork PRs get neither the secret nor the OIDC role, so they'd fail auth anyway.
+  plan:
+    needs: [discover, validate]
+    if: >-
+      needs.discover.outputs.stacks != '[]' &&
+      (github.event_name == 'workflow_dispatch' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # OIDC token for AWS
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        stack: ${{ fromJson(needs.discover.outputs.stacks) }}
+    env:
+      # The state bucket embeds the mgmt account ID; a secret keeps it out of git
+      # AND masks it in the public log. Same value as your backend.hcl bucket.
+      TF_VAR_state_bucket: ${{ secrets.TF_STATE_BUCKET }}
+      # GitHub identity for the bootstrap stack (required vars, supplied from the
+      # Actions context so it stays forkable and matches this repo). Harmless to
+      # other stacks (undeclared TF_VAR_* are ignored). IDs cover immutable-ID
+      # OIDC subjects (docs/layer2-issues.md #2); non-account, public values.
+      TF_VAR_github_org: ${{ github.repository_owner }}
+      TF_VAR_github_repo: ${{ github.event.repository.name }}
+      TF_VAR_github_owner_id: ${{ github.repository_owner_id }}
+      TF_VAR_github_repo_id: ${{ github.repository_id }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Configure AWS credentials (OIDC, no stored keys)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          # Secret, not a variable: the ARN embeds the mgmt account ID, and GitHub
+          # echoes action inputs in the log. A secret masks it as *** in the
+          # public run log (a variable would print the account ID in clear text).
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Mask account IDs in logs
+        # Plan output prints ARNs/IDs; register every org account ID as a mask so
+        # the public log shows *** instead. The mgmt OIDC role can list the org.
+        run: |
+          for id in $(aws organizations list-accounts --query 'Accounts[].Id' --output text 2>/dev/null); do
+            echo "::add-mask::$id"
+          done
+          [ -n "${id:-}" ] || echo "::warning::could not enumerate org accounts to mask"
 
       - uses: hashicorp/setup-terraform@v3
 
-      - name: Terraform fmt
-        working-directory: terraform/${{ matrix.stack }}
-        run: terraform fmt -check -recursive
-
       - name: Terraform init
         working-directory: terraform/${{ matrix.stack }}
-        run: terraform init -input=false
-
-      - name: Terraform validate
-        working-directory: terraform/${{ matrix.stack }}
-        run: terraform validate
+        # Partial backend: bucket comes from the secret, rest from versions.tf.
+        run: terraform init -input=false -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}"
 
       - name: Terraform plan
         working-directory: terraform/${{ matrix.stack }}

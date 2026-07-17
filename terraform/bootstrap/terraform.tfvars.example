@@ -2,3 +2,11 @@ name_prefix = "refplatform"
 aws_region  = "us-east-1"
 github_org  = "your-github-username"
 github_repo = "aws-eks-reference-platform"
+
+# Only if your GitHub account emits immutable-ID OIDC subjects (the token `sub`
+# looks like `repo:OWNER@<id>/REPO@<id>:...` instead of `repo:OWNER/REPO:...`).
+# Set BOTH to the public numeric IDs (not AWS account IDs); leave empty otherwise.
+#   gh api repos/OWNER/REPO --jq '{owner: .owner.id, repo: .id}'
+# See docs/layer2-issues.md #2.
+# github_owner_id = "123456789"
+# github_repo_id  = "987654321"

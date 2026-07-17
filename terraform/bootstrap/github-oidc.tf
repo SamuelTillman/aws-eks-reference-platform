@@ -32,13 +32,22 @@ data "aws_iam_policy_document" "github_trust" {
       values   = ["sts.amazonaws.com"]
     }
 
-    # Scope trust to this repo. Tighten to a branch or environment later:
-    #   repo:ORG/REPO:ref:refs/heads/main
-    #   repo:ORG/REPO:environment:prod
+    # Scope trust to this repo via `sub` (AWS requires the trust to condition on
+    # `sub` or `job_workflow_ref`, so the `repository` claim alone is rejected).
+    # Accounts that emit immutable-ID OIDC subjects produce
+    # `repo:OWNER@<owner_id>/REPO@<repo_id>:*`; others produce the plain
+    # `repo:OWNER/REPO:*`. Set github_owner_id/github_repo_id (public numeric IDs,
+    # not account IDs) to match the immutable form; leave empty for the plain
+    # form. See docs/layer2-issues.md #2. Tighten to a branch/environment later
+    # by narrowing the `:*` suffix.
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_org}/${var.github_repo}:*"]
+      values = [
+        var.github_owner_id != "" && var.github_repo_id != "" ?
+        "repo:${var.github_org}@${var.github_owner_id}/${var.github_repo}@${var.github_repo_id}:*" :
+        "repo:${var.github_org}/${var.github_repo}:*"
+      ]
     }
   }
 }
