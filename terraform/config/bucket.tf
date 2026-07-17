@@ -44,6 +44,23 @@ resource "aws_s3_bucket_public_access_block" "config" {
 }
 
 data "aws_iam_policy_document" "config_bucket" {
+  # Enforce TLS in transit (ADR-0009).
+  statement {
+    sid       = "DenyInsecureTransport"
+    effect    = "Deny"
+    actions   = ["s3:*"]
+    resources = [aws_s3_bucket.config.arn, "${aws_s3_bucket.config.arn}/*"]
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+
   statement {
     sid       = "AWSConfigBucketPermissionsCheck"
     effect    = "Allow"
