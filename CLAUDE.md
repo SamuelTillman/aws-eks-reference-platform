@@ -27,6 +27,10 @@ EKS → GPU/AI), built in layers. See [README.md](README.md) for the layer map a
   steps ([docs/bootstrap.md](docs/bootstrap.md)).
 - **Decisions get an ADR** in `docs/adr/`, numbered sequentially. Update the
   index table in [docs/adr/README.md](docs/adr/README.md).
+- **Log issues as you hit them.** Every non-trivial deploy or operational issue
+  gets an entry in `docs/layer<N>-issues.md` (symptom, root cause, fix,
+  prevention). Create the file if that layer has none. Do this as part of the
+  fix, without being asked.
 
 ## AWS access
 
@@ -43,6 +47,12 @@ EKS → GPU/AI), built in layers. See [README.md](README.md) for the layer map a
   logs. `fmt`/`validate` run on every PR (incl. forks, no creds); the real cloud
   `plan` runs only for same-repo PRs. Set up: add `TF_STATE_BUCKET` (same value
   as your `backend.hcl` bucket) under repo → Settings → Secrets → Actions.
+- **Teardown/rebuild:** `.github/workflows/platform-lifecycle.yml` (manual
+  `workflow_dispatch`) applies/destroys the rebuildable layers on demand to idle
+  cost to near-zero and rebuild from code ([ADR-0008](docs/adr/0008-cicd-lifecycle-teardown-rebuild.md)).
+  It is the one exception to plan-only CI: gated by a typed confirm, a shown plan,
+  and the `platform-lifecycle` GitHub Environment (add a required reviewer there
+  for a human approval gate). Never targets bootstrap/org/identity/logging.
 
 ## Terraform workflow (every stack)
 
@@ -79,6 +89,7 @@ Flat under `terraform/`, one state key per stack (all in the one S3 bucket):
 | `cicd` | `cicd/terraform.tfstate` | per-account OIDC deploy roles + central ECR *(Layer 1, done)* |
 | `networking` | `networking/terraform.tfstate` | TGW centralized-egress hub, VPCs, flow logs (cross-account) *(Layer 1, done)* |
 | `eks` | `eks/terraform.tfstate` | dev EKS cluster: API-auth access entries, Pod Identity, managed add-ons, system node group (in `workloads-dev`) *(Layer 2, scaffolded, not yet deployed)* |
+| `budgets` | `budgets/terraform.tfstate` | monthly cost budget + $50-increment spend alerts (mgmt/payer) *(cost, ADR-0008)* |
 
 ## Cross-account model (Layer 1+)
 

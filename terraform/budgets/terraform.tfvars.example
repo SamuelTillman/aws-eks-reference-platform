@@ -1,0 +1,12 @@
+aws_region  = "us-east-1"
+name_prefix = "refplatform"
+
+# Where budget alerts are emailed. Kept in gitignored tfvars so a personal
+# address does not land in the public repo. Empty = budget with no notifications.
+alert_email = "you@example.com"
+
+# Alert at every $increment of actual spend, up to the ceiling.
+# AWS allows up to 10 notifications per budget, so ceiling / increment <= 10
+# (e.g. 500 / 50 = 10) without requesting a quota increase.
+budget_ceiling   = 500
+budget_increment = 50
