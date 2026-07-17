@@ -35,6 +35,37 @@ resource "aws_iam_role_policy_attachment" "node" {
   policy_arn = each.value
 }
 
+# Launch template: enforce IMDSv2 and encrypt the node root volume (ADR-0009).
+# No image_id, so EKS still supplies the AMI selected by the node group's
+# ami_type; disk_size moves here as an encrypted block device mapping.
+resource "aws_launch_template" "node" {
+  provider    = aws.workloads_dev
+  name_prefix = "${local.cluster_name}-node-"
+
+  # IMDSv2 required + hop limit 1: a pod or SSRF cannot reach the node role
+  # credentials via the instance metadata service.
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 1
+  }
+
+  # Encrypted root EBS volume (AL2023 root device is /dev/xvda).
+  block_device_mappings {
+    device_name = "/dev/xvda"
+    ebs {
+      volume_size = var.node_disk_size
+      volume_type = "gp3"
+      encrypted   = true
+    }
+  }
+
+  tag_specifications {
+    resource_type = "instance"
+    tags          = { "platform.refplatform/tier" = "system" }
+  }
+}
+
 resource "aws_eks_node_group" "system" {
   provider = aws.workloads_dev
 
@@ -46,7 +77,11 @@ resource "aws_eks_node_group" "system" {
   instance_types = var.node_instance_types
   capacity_type  = var.node_capacity_type
   ami_type       = "AL2023_x86_64_STANDARD"
-  disk_size      = var.node_disk_size
+
+  launch_template {
+    id      = aws_launch_template.node.id
+    version = aws_launch_template.node.latest_version
+  }
 
   scaling_config {
     desired_size = var.node_desired_size
