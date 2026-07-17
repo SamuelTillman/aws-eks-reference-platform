@@ -37,3 +37,4 @@ Want the background on the format? See Michael Nygard's original write-up:
 | [0005](0005-cicd-foundation.md) | CI/CD foundation, per-account OIDC deploy roles, central ECR, prod approval gate | Accepted |
 | [0006](0006-network-architecture.md) | Network architecture, centralized-egress hub-and-spoke with Transit Gateway | Accepted |
 | [0007](0007-eks-cluster-foundation.md) | EKS cluster foundation, dev cluster, VPC CNI, managed node group, access entries | Accepted |
+| [0008](0008-cicd-lifecycle-teardown-rebuild.md) | Push-button teardown/rebuild (CI-driven apply/destroy lifecycle) + budget alarms | Accepted |

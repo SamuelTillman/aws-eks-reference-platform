@@ -1,0 +1,117 @@
+name: Platform Lifecycle (apply / destroy)
+
+# Manual-only teardown/rebuild of the REBUILDABLE layers (ADR-0008). Never runs
+# on push or PR. bootstrap/org/identity/logging are never targets. This is the
+# one deliberate exception to plan-only CI: the plan is printed before acting,
+# and the human dispatch + typed confirm + environment reviewer are the gates.
+
+on:
+  workflow_dispatch:
+    inputs:
+      stack:
+        description: "Which layer to act on"
+        required: true
+        type: choice
+        options: [networking, eks, security]
+      action:
+        description: "apply = create/rebuild (for security, restore monitoring); destroy = tear down (for security, stand down monitoring)"
+        required: true
+        type: choice
+        options: [apply, destroy]
+      confirm:
+        description: "To DESTROY, type the stack name exactly (networking / eks / security). Ignored for apply."
+        required: false
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  # Never let an apply and a destroy of the same stack overlap.
+  group: lifecycle-${{ github.event.inputs.stack }}
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  lifecycle:
+    runs-on: ubuntu-latest
+    # Add a required reviewer to this environment in repo settings for a human
+    # gate on every run (see ADR-0008). Until then it runs without approval.
+    environment: platform-lifecycle
+    env:
+      TF_VAR_state_bucket: ${{ secrets.TF_STATE_BUCKET }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Confirm destroy intent
+        if: ${{ github.event.inputs.action == 'destroy' }}
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "${{ github.event.inputs.stack }}" ]; then
+            echo "::error::destroy requires 'confirm' to equal the stack name '${{ github.event.inputs.stack }}' (got '${{ github.event.inputs.confirm }}')."
+            exit 1
+          fi
+          echo "Confirmed destroy of ${{ github.event.inputs.stack }}."
+
+      - name: Configure AWS credentials (OIDC, no stored keys)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Mask account IDs in logs
+        run: |
+          for id in $(aws organizations list-accounts --query 'Accounts[].Id' --output text 2>/dev/null); do
+            echo "::add-mask::$id"
+          done
+          [ -n "${id:-}" ] || echo "::warning::could not enumerate org accounts to mask"
+
+      - name: Guard - do not destroy networking while an EKS cluster exists
+        if: ${{ github.event.inputs.stack == 'networking' && github.event.inputs.action == 'destroy' }}
+        run: |
+          dev=$(aws organizations list-accounts --query "Accounts[?Name=='workloads-dev'].Id | [0]" --output text)
+          creds=$(aws sts assume-role --role-arn "arn:aws:iam::$dev:role/OrganizationAccountAccessRole" \
+            --role-session-name lifecycle-guard --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text)
+          n=$(AWS_ACCESS_KEY_ID=$(echo "$creds"|cut -f1) AWS_SECRET_ACCESS_KEY=$(echo "$creds"|cut -f2) AWS_SESSION_TOKEN=$(echo "$creds"|cut -f3) \
+              aws eks list-clusters --region "$AWS_REGION" --query 'length(clusters)' --output text)
+          if [ "$n" != "0" ]; then
+            echo "::error::$n EKS cluster(s) still in workloads-dev. Destroy the 'eks' stack before 'networking' (it depends on the VPC/subnets)."
+            exit 1
+          fi
+          echo "No EKS clusters present; safe to destroy networking."
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init
+        working-directory: terraform/${{ github.event.inputs.stack }}
+        run: terraform init -input=false -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}"
+
+      - name: Terraform plan + ${{ github.event.inputs.action }}
+        working-directory: terraform/${{ github.event.inputs.stack }}
+        run: |
+          set -euo pipefail
+          STACK="${{ github.event.inputs.stack }}"
+          ACTION="${{ github.event.inputs.action }}"
+
+          if [ "$STACK" = "security" ]; then
+            # security is toggled by enable_* flags, never terraform-destroyed
+            # (that would tear down delegated-admin wiring). destroy = stand down.
+            if [ "$ACTION" = "destroy" ]; then FLAG=false; else FLAG=true; fi
+            VARS="-var enable_guardduty=$FLAG -var enable_securityhub=$FLAG -var enable_access_analyzer=$FLAG"
+            echo "== security $ACTION (enable_*=$FLAG): plan =="
+            terraform plan $VARS -input=false -no-color
+            echo "== apply =="
+            terraform apply $VARS -input=false -no-color -auto-approve
+          elif [ "$ACTION" = "destroy" ]; then
+            echo "== $STACK destroy plan =="
+            terraform plan -destroy -input=false -no-color
+            echo "== destroy =="
+            terraform destroy -input=false -no-color -auto-approve
+          else
+            echo "== $STACK plan =="
+            terraform plan -input=false -no-color
+            echo "== apply =="
+            terraform apply -input=false -no-color -auto-approve
+          fi
