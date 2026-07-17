@@ -80,6 +80,23 @@ Services enabled for this platform: `sso`, `cloudtrail`, `guardduty`,
   then created immediately. The out-of-band registration was `terraform import`ed
   so code and state match.
 
+## 5. Config stack replaces 5 IAM attachments on every apply
+
+- **Stack:** `terraform/config`
+- **Symptom:** an unrelated apply (adding a TLS-only bucket policy) planned
+  `5 to add, 5 to destroy`, replacing `module.config_*.aws_iam_role_policy_attachment.config`
+  in all five accounts.
+- **Root cause:** the module builds the `AWS_ConfigRole` policy ARN from
+  `data.aws_partition.current`, which resolves to "known after apply", so the
+  attachment's `policy_arn` reads as computed and Terraform force-replaces it.
+  Detaching/reattaching the identical managed policy does not stop recording
+  (verified: all five recorders stayed `recording=True`, `lastStatus=SUCCESS`).
+- **Fix (optional):** hardcode `arn:aws:iam::aws:policy/service-role/AWS_ConfigRole`
+  (partition `aws`) in the module, or otherwise stabilize the partition lookup,
+  to stop the churn. Harmless but noisy.
+- **Prevention:** read destroy/replace plans in full before applying, even for a
+  one-line change; a "known after apply" on a data source can force replacements.
+
 ## Operational notes
 
 - **SSO session expiry vs. background jobs.** A background retry loop for the
