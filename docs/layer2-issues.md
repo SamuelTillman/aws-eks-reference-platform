@@ -23,20 +23,26 @@ have to rediscover any of these. See also
 - **Prevention:** any value embedding an account ID that is passed to an action
   input must be a secret, not a variable.
 
-## 2. plan CI: OIDC assume-role "Not authorized" (investigating)
+## 2. plan CI: OIDC assume-role "Not authorized" (fixed)
 
 - **Where:** `plan` job, `Configure AWS credentials (OIDC)` step.
 - **Symptom:** `Could not assume role with OIDC: Not authorized to perform
   sts:AssumeRoleWithWebIdentity`. `discover` and `validate` pass; only the cloud
-  `plan` fails. This is the first time the plan workflow has actually attempted
-  the cross-account assume (the prior workflow was stale and never ran green).
-- **Checked so far (all correct):** the deployed `refplatform-github-actions`
-  trust policy matches the repo (`aud = sts.amazonaws.com`, `sub` StringLike
-  `repo:SamuelTillman/aws-eks-reference-platform:*`); the GitHub OIDC provider
-  exists with audience `sts.amazonaws.com` and the standard thumbprint; the
-  `AWS_ROLE_ARN` secret points at that role in the mgmt account.
-- **Next step:** a temporary debug step in the `plan` job prints the token's
-  real `sub`/`aud` claims to confirm what STS actually receives, since a correct
-  trust policy plus a rejected assume implies the live claim differs from the
-  expected `repo:OWNER/REPO:...` form.
-- **Status:** open.
+  `plan` fails. This was the first time the plan workflow actually attempted the
+  cross-account assume (the prior workflow was stale and never ran green).
+- **Root cause:** this account emits **immutable-ID OIDC subjects**. A debug step
+  printing the token claims showed the real `sub` was
+  `repo:SamuelTillman@141371265/aws-eks-reference-platform@1302268994:pull_request`,
+  with numeric owner/repo IDs appended. The trust policy matched the plain
+  `repo:OWNER/REPO:*`, which the `@<id>` form never matches, so STS rejected it.
+- **False lead:** switching the condition to the (always-plain) `repository`
+  claim was rejected by AWS: `MalformedPolicyDocument ... must evaluate ...
+  token.actions.githubusercontent.com:sub or ...:job_workflow_ref`. AWS *requires*
+  the GitHub-OIDC trust to condition on `sub` (or `job_workflow_ref`).
+- **Fix:** match `sub` against the immutable form, built from two new bootstrap
+  variables `github_owner_id`/`github_repo_id` (public numeric IDs, not account
+  IDs); empty falls back to the plain `repo:OWNER/REPO:*`. Get the IDs with
+  `gh api repos/OWNER/REPO --jq '{owner: .owner.id, repo: .id}'`.
+- **Prevention:** forkers whose accounts emit immutable subjects set those two
+  vars; the plain form remains the default.
+- **Status:** fixed (bootstrap re-applied; trust now matches the immutable sub).
