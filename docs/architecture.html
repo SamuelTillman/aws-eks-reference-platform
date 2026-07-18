@@ -1,0 +1,388 @@
+<style>
+  :root {
+    color-scheme: dark;
+    --ground: #0b0e14; --grid: rgba(120,140,180,0.055);
+    --surface: #12171f; --surface-2: #171d27;
+    --line: #232c39; --line-strong: #33404f;
+    --text: #e7ebf2; --muted: #8994a7; --faint: #5c6678;
+    --accent: #3bc0d0; --accent-dim: rgba(59,192,208,0.14);
+    --live: #46b978; --wip: #d8a441; --planned: #6a7488;
+    --l0: #6a76b8; --l1: #4b87c4; --l2: #37b3bf; --l3: #46b58a; --l4: #b89a56; --l5: #a06f9f;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Roboto Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --maxw: 1120px; --radius: 12px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      color-scheme: light;
+      --ground: #f4f6f9; --grid: rgba(40,70,120,0.05);
+      --surface: #ffffff; --surface-2: #eef1f6;
+      --line: #dde3ec; --line-strong: #c6cfdc;
+      --text: #182029; --muted: #566073; --faint: #8a93a3;
+      --accent: #1591a1; --accent-dim: rgba(21,145,161,0.1);
+      --live: #2f9760; --wip: #b0812a; --planned: #8a93a3;
+      --l0: #5560a6; --l1: #3a74b0; --l2: #1c96a3; --l3: #2e9a72; --l4: #9a7f3c; --l5: #8c5a8a;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground:#0b0e14; --grid:rgba(120,140,180,0.055); --surface:#12171f; --surface-2:#171d27;
+    --line:#232c39; --line-strong:#33404f; --text:#e7ebf2; --muted:#8994a7; --faint:#5c6678;
+    --accent:#3bc0d0; --accent-dim:rgba(59,192,208,0.14);
+    --live:#46b978; --wip:#d8a441; --planned:#6a7488;
+    --l0:#6a76b8; --l1:#4b87c4; --l2:#37b3bf; --l3:#46b58a; --l4:#b89a56; --l5:#a06f9f;
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --ground:#f4f6f9; --grid:rgba(40,70,120,0.05); --surface:#ffffff; --surface-2:#eef1f6;
+    --line:#dde3ec; --line-strong:#c6cfdc; --text:#182029; --muted:#566073; --faint:#8a93a3;
+    --accent:#1591a1; --accent-dim:rgba(21,145,161,0.1);
+    --live:#2f9760; --wip:#b0812a; --planned:#8a93a3;
+    --l0:#5560a6; --l1:#3a74b0; --l2:#1c96a3; --l3:#2e9a72; --l4:#9a7f3c; --l5:#8c5a8a;
+  }
+  * { box-sizing: border-box; }
+
+  .page {
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 28px 28px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 28px 28px,
+      var(--ground);
+    color: var(--text); font-family: var(--sans); line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
+
+  /* nav */
+  .topnav {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--ground) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topnav .wrap { display: flex; align-items: center; gap: 18px; height: 52px; flex-wrap: wrap; }
+  .brand { font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.06em; color: var(--accent); font-weight: 600; white-space: nowrap; }
+  .navlinks { display: flex; gap: 4px; flex-wrap: wrap; margin-left: auto; }
+  .navlinks a {
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.03em;
+    color: var(--muted); text-decoration: none; padding: 5px 9px; border-radius: 7px;
+  }
+  .navlinks a:hover { color: var(--text); background: var(--surface-2); }
+  .navlinks a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  header.hero { padding: clamp(36px,7vw,72px) 0 20px; }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); display: inline-flex; align-items: center; gap: 9px; }
+  .eyebrow::before { content:""; width: 22px; height: 1px; background: var(--accent); }
+  h1 { font-size: clamp(30px,5.4vw,50px); line-height: 1.04; letter-spacing: -0.02em; font-weight: 680; text-wrap: balance; margin: 16px 0 0; }
+  h1 .thin { color: var(--muted); font-weight: 500; }
+  .lede { max-width: 62ch; color: var(--muted); font-size: clamp(15px,1.9vw,17px); margin: 16px 0 0; }
+
+  section { padding: 30px 0; border-top: 1px solid var(--line); scroll-margin-top: 62px; }
+  section:first-of-type { border-top: 0; }
+  .sec-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+  .sec-num { font-family: var(--mono); font-size: 12px; color: var(--faint); letter-spacing: 0.1em; }
+  h2 { font-size: clamp(20px,3vw,27px); font-weight: 660; letter-spacing: -0.015em; margin: 0; }
+  .sec-sub { color: var(--muted); font-size: 14.5px; margin: 8px 0 22px; max-width: 68ch; }
+
+  /* stat row */
+  .stats { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+  .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 11px 15px; display: flex; flex-direction: column; gap: 2px; min-width: 104px; }
+  .stat b { font-family: var(--mono); font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stat span { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+
+  /* ---- layer stack ---- */
+  .stack { display: flex; flex-direction: column; }
+  .layer { display: grid; grid-template-columns: 60px 1fr; }
+  .spine { position: relative; display: flex; flex-direction: column; align-items: center; }
+  .spine::before { content:""; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; transform: translateX(-50%); background: var(--line); }
+  .layer:first-child .spine::before { top: 24px; }
+  .layer:last-child .spine::before { bottom: calc(100% - 24px); }
+  .node { position: relative; z-index: 1; margin-top: 12px; width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; font-family: var(--mono); font-size: 16px; font-weight: 600; background: var(--surface-2); border: 1.5px solid var(--lh, var(--line-strong)); color: var(--lh, var(--text)); font-variant-numeric: tabular-nums; }
+  .card { border: 1px solid var(--line); border-left: 3px solid var(--lh, var(--line-strong)); border-radius: 10px; background: var(--surface); padding: 14px 16px 15px; margin: 7px 0 7px 12px; flex: 1; }
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+  .card-eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--lh, var(--muted)); }
+  .card h3 { font-size: 18px; font-weight: 650; letter-spacing: -0.015em; margin: 3px 0 0; }
+  .card .purpose { color: var(--muted); font-size: 13.5px; margin: 5px 0 0; max-width: 64ch; }
+  .layer.planned .card { border-style: dashed; background: color-mix(in srgb, var(--surface) 55%, transparent); }
+  .layer.planned .node { border-style: dashed; }
+  .layer.planned h3 { color: var(--muted); }
+
+  .pill { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 9px; border-radius: 100px; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent; }
+  .pill::before { content:""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .pill.live { color: var(--live); background: color-mix(in srgb,var(--live) 13%,transparent); border-color: color-mix(in srgb,var(--live) 30%,transparent); }
+  .pill.wip { color: var(--wip); background: color-mix(in srgb,var(--wip) 13%,transparent); border-color: color-mix(in srgb,var(--wip) 30%,transparent); }
+  .pill.planned { color: var(--planned); background: color-mix(in srgb,var(--planned) 12%,transparent); border-color: color-mix(in srgb,var(--planned) 26%,transparent); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .chip { font-family: var(--mono); font-size: 11.5px; padding: 4px 9px; border-radius: 7px; background: var(--surface-2); border: 1px solid var(--line); color: var(--text); }
+  .chip.key { border-color: var(--lh); color: var(--lh); background: color-mix(in srgb, var(--lh) 9%, transparent); }
+  .chip.ghost { color: var(--faint); border-style: dashed; }
+
+  /* ---- flow diagrams ---- */
+  .figure { border: 1px solid var(--line); border-radius: var(--radius); background: color-mix(in srgb, var(--surface) 70%, transparent); padding: 20px; overflow-x: auto; }
+  .flow { display: flex; align-items: stretch; gap: 0; min-width: min-content; }
+  .flow.wrapy { flex-wrap: wrap; gap: 12px 0; }
+  .lane { border: 1px dashed var(--line-strong); border-radius: 11px; padding: 26px 14px 14px; position: relative; display: flex; gap: 12px; align-items: center; background: color-mix(in srgb, var(--surface) 40%, transparent); }
+  .lane > .lane-label { position: absolute; top: 8px; left: 12px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); }
+  .lane.hl { border-color: var(--accent); }
+  .lane.hl > .lane-label { color: var(--accent); }
+
+  .step { border: 1px solid var(--line); border-top: 2px solid var(--sc, var(--line-strong)); border-radius: 9px; background: var(--surface); padding: 11px 13px; min-width: 148px; max-width: 220px; }
+  .step b { font-size: 13.5px; font-weight: 640; display: block; letter-spacing: -0.01em; }
+  .step small { font-family: var(--mono); font-size: 10.5px; color: var(--muted); display: block; margin-top: 3px; line-height: 1.4; }
+  .step .tag { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--sc, var(--faint)); }
+
+  .arrow { flex: 0 0 auto; align-self: center; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0 6px; min-width: 74px; }
+  .arrow .line { position: relative; width: 100%; height: 2px; background: var(--line-strong); }
+  .arrow .line::after { content:""; position: absolute; right: -1px; top: 50%; width: 7px; height: 7px; border-top: 2px solid var(--line-strong); border-right: 2px solid var(--line-strong); transform: translateY(-50%) rotate(45deg); }
+  .arrow .lbl { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.02em; color: var(--muted); text-align: center; line-height: 1.3; max-width: 130px; }
+  .arrow.accent .line, .arrow.accent .line::after { background: var(--accent); border-color: var(--accent); }
+  .arrow.accent .lbl { color: var(--accent); }
+
+  .col { display: flex; flex-direction: column; gap: 8px; }
+  .stackbox { border: 1px solid var(--line); border-radius: 9px; background: var(--surface); padding: 10px 12px; }
+  .stackbox .sb-h { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-bottom: 7px; }
+  .caption { color: var(--muted); font-size: 13px; margin: 12px 2px 0; }
+  .caption b { color: var(--text); font-weight: 620; }
+
+  .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 14px; }
+  .note { border: 1px solid var(--line); border-left: 2px solid var(--accent); border-radius: 8px; background: var(--surface); padding: 10px 12px; }
+  .note b { font-size: 12.5px; font-weight: 640; display: block; margin-bottom: 3px; }
+  .note p { color: var(--muted); font-size: 12px; margin: 0; }
+
+  /* cross rail */
+  .cross { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+  .cc { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 15px 16px; }
+  .cc h4 { font-size: 14px; font-weight: 640; margin: 0 0 7px; display: flex; align-items: center; gap: 8px; }
+  .cc h4 span { font-family: var(--mono); font-size: 11px; color: var(--accent); }
+  .cc p { color: var(--muted); font-size: 13px; margin: 0; }
+
+  footer { padding: 28px 0 56px; border-top: 1px solid var(--line); color: var(--faint); font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.04em; display: flex; gap: 16px; flex-wrap: wrap; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; }
+  .legend .k { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  @media (max-width: 760px) {
+    .cross { grid-template-columns: 1fr; }
+    .layer { grid-template-columns: 44px 1fr; }
+  }
+</style>
+
+<div class="page">
+
+  <nav class="topnav">
+    <div class="wrap">
+      <span class="brand">refplatform / architecture</span>
+      <div class="navlinks">
+        <a href="#layers">Layers</a>
+        <a href="#creds">Credential flow</a>
+        <a href="#audit">Audit trail</a>
+        <a href="#network">Networking</a>
+        <a href="#eks">EKS internals</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="wrap">
+
+    <header class="hero">
+      <div class="eyebrow">AWS Reference Platform</div>
+      <h1>Architecture reference<br><span class="thin">a governed multi-account platform, built in layers.</span></h1>
+      <p class="lede">One forkable Terraform codebase across five AWS accounts: an organization with guardrails, a tamper-resistant audit backbone, centralized-egress networking, and a Kubernetes platform. This page maps the whole thing, then walks the flows that make it work. Nothing stores a long-lived credential.</p>
+      <div class="stats">
+        <div class="stat"><b>5</b><span>Accounts</span></div>
+        <div class="stat"><b>3</b><span>Org OUs</span></div>
+        <div class="stat"><b>10</b><span>TF stacks</span></div>
+        <div class="stat"><b>0</b><span>Stored creds</span></div>
+        <div class="stat"><b>1&#8202;-click</b><span>Teardown</span></div>
+      </div>
+    </header>
+
+    <!-- ============ LAYERS ============ -->
+    <section id="layers">
+      <div class="sec-head"><span class="sec-num">01</span><h2>The layered build</h2></div>
+      <p class="sec-sub">Layer 0 is the foundation; every layer above depends on the one below. Status is encoded in form: solid is live, amber is the foundation increment, dashed is planned.</p>
+
+      <div class="stack">
+        <div class="layer planned" style="--lh: var(--l5)">
+          <div class="spine"><div class="node">5</div></div>
+          <div class="card"><div class="card-top"><div><div class="card-eyebrow">Architecture &amp; FinOps</div><h3>Documentation layer</h3><p class="purpose">Decision log, threat model, and cost dashboard: the evidence the platform works.</p></div><span class="pill planned">Planned</span></div>
+            <div class="chips"><span class="chip ghost">ADR log</span><span class="chip ghost">Threat model</span><span class="chip ghost">FinOps dashboard</span></div></div>
+        </div>
+        <div class="layer planned" style="--lh: var(--l4)">
+          <div class="spine"><div class="node">4</div></div>
+          <div class="card"><div class="card-top"><div><div class="card-eyebrow">Sample workload</div><h3>A real app on the platform</h3><p class="purpose">A fictional fishing-charter booking SaaS: proof the platform hosts genuine product, not just infrastructure.</p></div><span class="pill planned">Planned</span></div>
+            <div class="chips"><span class="chip ghost">Charter SaaS</span><span class="chip ghost">Data pipeline</span><span class="chip ghost">Bedrock RAG</span></div></div>
+        </div>
+        <div class="layer planned" style="--lh: var(--l3)">
+          <div class="spine"><div class="node">3</div></div>
+          <div class="card"><div class="card-top"><div><div class="card-eyebrow">GPU / AI serving</div><h3>Accelerated inference</h3><p class="purpose">GPU capacity and model serving layered onto the cluster for AI/ML workloads.</p></div><span class="pill planned">Planned</span></div>
+            <div class="chips"><span class="chip ghost">GPU Operator</span><span class="chip ghost">MIG</span><span class="chip ghost">vLLM</span></div></div>
+        </div>
+        <div class="layer" style="--lh: var(--l2)">
+          <div class="spine"><div class="node">2</div></div>
+          <div class="card"><div class="card-top"><div><div class="card-eyebrow">EKS platform &middot; workloads-dev</div><h3>Kubernetes cluster</h3><p class="purpose">The refplatform-dev cluster is live on EKS 1.35: API access entries, Pod Identity, KMS-encrypted secrets, IMDSv2 + encrypted-EBS spot nodes. Platform tooling lands via GitOps next.</p></div><span class="pill wip">Foundation live</span></div>
+            <div class="chips"><span class="chip key">EKS 1.35</span><span class="chip key">Spot nodes</span><span class="chip key">Access entries</span><span class="chip key">Pod Identity</span><span class="chip ghost">Karpenter</span><span class="chip ghost">Cilium</span><span class="chip ghost">ArgoCD</span><span class="chip ghost">Prometheus/OTel</span><span class="chip ghost">Kyverno</span><span class="chip ghost">Backstage</span></div></div>
+        </div>
+        <div class="layer" style="--lh: var(--l1)">
+          <div class="spine"><div class="node">1</div></div>
+          <div class="card"><div class="card-top"><div><div class="card-eyebrow">Landing zone</div><h3>Security, audit &amp; networking backbone</h3><p class="purpose">The shared spine every workload inherits: identity, an immutable audit trail, org-wide threat detection, CI/CD identity, and centralized-egress networking.</p></div><span class="pill live">Live</span></div>
+            <div class="chips"><span class="chip key">Identity Center SSO</span><span class="chip key">Org CloudTrail</span><span class="chip key">AWS Config + aggregator</span><span class="chip key">GuardDuty</span><span class="chip key">Security Hub</span><span class="chip key">Access Analyzer</span><span class="chip key">Transit Gateway hub</span><span class="chip key">3-AZ VPCs + flow logs</span><span class="chip key">OIDC deploy roles + ECR</span></div></div>
+        </div>
+        <div class="layer" style="--lh: var(--l0)">
+          <div class="spine"><div class="node">0</div></div>
+          <div class="card"><div class="card-top"><div><div class="card-eyebrow">Org bootstrap</div><h3>The foundation</h3><p class="purpose">The organization itself: accounts, OUs, guardrail SCPs, the Terraform state backend, and GitHub OIDC. Everything above is built on this.</p></div><span class="pill live">Live</span></div>
+            <div class="chips"><span class="chip key">Accounts + OUs</span><span class="chip key">S3 state backend</span><span class="chip key">GitHub OIDC</span><span class="chip key">SCP: deny-root</span><span class="chip key">SCP: region-lock</span><span class="chip key">SCP: deny-disable-audit</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CREDENTIAL FLOW ============ -->
+    <section id="creds">
+      <div class="sec-head"><span class="sec-num">02</span><h2>Credential flow: how CI reaches AWS with zero secrets</h2></div>
+      <p class="sec-sub">A GitHub Action never holds an AWS key. It trades a short-lived OIDC token for a role, then hops one more role into the target account. Every step is logged; nothing outlives the run.</p>
+      <div class="figure">
+        <div class="flow">
+          <div class="lane"><span class="lane-label">GitHub</span>
+            <div class="step" style="--sc: var(--l2)"><span class="tag">workflow run</span><b>terraform-plan / lifecycle</b><small>requests an OIDC token from GitHub's IdP</small></div>
+          </div>
+          <div class="arrow accent"><div class="lbl">OIDC JWT<br>no secrets</div><div class="line"></div><div class="lbl">sub: repo:owner@id/<br>repo@id</div></div>
+          <div class="lane hl"><span class="lane-label">AWS &middot; management</span>
+            <div class="step" style="--sc: var(--accent)"><span class="tag">sts</span><b>AssumeRoleWithWebIdentity</b><small>trust: aud=sts.amazonaws.com + exact repo subject</small></div>
+            <div class="arrow"><div class="line"></div></div>
+            <div class="step" style="--sc: var(--l1)"><span class="tag">iam role</span><b>refplatform-github-actions</b><small>federated, session-capped to 1h</small></div>
+          </div>
+          <div class="arrow"><div class="lbl">sts:AssumeRole</div><div class="line"></div></div>
+          <div class="lane"><span class="lane-label">AWS &middot; member account</span>
+            <div class="step" style="--sc: var(--l1)"><span class="tag">iam role</span><b>OrganizationAccountAccessRole</b><small>assumed per target account</small></div>
+            <div class="arrow"><div class="line"></div></div>
+            <div class="step" style="--sc: var(--l2)"><span class="tag">terraform</span><b>plan / apply</b><small>VPC, EKS, IAM, ... in workloads-dev</small></div>
+          </div>
+        </div>
+        <p class="caption"><b>No IAM users, no access keys.</b> The only stored value is the state-bucket name, kept as a masked repo secret so the account ID never lands in a public log.</p>
+        <div class="notes">
+          <div class="note"><b>Immutable-ID subject</b><p>The trust matches repo:owner@&lt;id&gt;/repo@&lt;id&gt;, so a renamed or namespace-reused repo cannot impersonate this one.</p></div>
+          <div class="note"><b>Two-hop, least standing power</b><p>The federated role holds no keys; member-account access is a second deliberate assume-role, not a standing grant.</p></div>
+          <div class="note"><b>Fork-safe CI</b><p>fmt/validate run for any PR with no credentials; the real cloud plan runs only for same-repo PRs.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ AUDIT ============ -->
+    <section id="audit">
+      <div class="sec-head"><span class="sec-num">03</span><h2>Audit trail: every account, one write-isolated archive</h2></div>
+      <p class="sec-sub">All five accounts feed a single audit backbone owned by the security account. A workload-account compromise cannot reach or tamper with the evidence, and an SCP stops anyone turning it off.</p>
+      <div class="figure">
+        <div class="flow">
+          <div class="lane"><span class="lane-label">All accounts</span>
+            <div class="col">
+              <div class="stackbox"><div class="sb-h">emit continuously</div>
+                <div class="chips" style="margin:0">
+                  <span class="chip">management</span><span class="chip">security</span><span class="chip">shared-services</span><span class="chip">workloads-dev</span><span class="chip">workloads-prod</span>
+                </div>
+                <small style="font-family:var(--mono);font-size:10.5px;color:var(--muted);display:block;margin-top:8px">CloudTrail events &middot; Config items &middot; GuardDuty findings &middot; VPC flow logs</small>
+              </div>
+            </div>
+          </div>
+          <div class="arrow accent"><div class="lbl">org trail<br>(defined in mgmt)</div><div class="line"></div><div class="lbl">KMS + validation</div></div>
+          <div class="lane hl"><span class="lane-label">Security account &middot; the archive</span>
+            <div class="col">
+              <div class="step" style="--sc: var(--accent)"><span class="tag">s3 + kms</span><b>CloudTrail log archive</b><small>log-file validation, TLS-only, Object-Lock-ready, force_destroy off</small></div>
+              <div class="step" style="--sc: var(--l1)"><span class="tag">config</span><b>Org aggregator</b><small>all accounts, all regions</small></div>
+              <div class="step" style="--sc: var(--l1)"><span class="tag">delegated admin</span><b>GuardDuty &middot; Security Hub &middot; Access Analyzer</b><small>org-wide detection, administered here not in mgmt</small></div>
+            </div>
+          </div>
+        </div>
+        <p class="caption"><b>Separation of duties.</b> Audit data lives in a low-privilege account, separate from where workloads run. The org CloudTrail is defined in the management account (org trails must originate there) but writes only to this bucket.</p>
+        <div class="notes">
+          <div class="note"><b>SCP: deny-disable-audit</b><p>No workload role, SSO human, or compromised credential can stop CloudTrail or Config, or delete a detector. Only the IaC path is exempt.</p></div>
+          <div class="note"><b>Immutable evidence</b><p>Versioned, TLS-only, non-destroyable, and Object-Lock-ready so historical logs cannot be altered or deleted.</p></div>
+          <div class="note"><b>Delegated administration</b><p>Detection services are administered from the security account, keeping the management account minimal.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ NETWORKING ============ -->
+    <section id="network">
+      <div class="sec-head"><span class="sec-num">04</span><h2>Networking: centralized-egress hub and spoke</h2></div>
+      <p class="sec-sub">Workload VPCs carry no NAT. They default-route to a Transit Gateway, which sends egress through one shared VPC. Dev and prod share the path but have no route to each other.</p>
+      <div class="figure">
+        <div class="flow">
+          <div class="lane"><span class="lane-label">Spokes &middot; workloads</span>
+            <div class="col">
+              <div class="step" style="--sc: var(--l2)"><span class="tag">vpc &middot; no NAT</span><b>workloads-dev</b><small>private subnets, 0.0.0.0/0 &rarr; TGW</small></div>
+              <div class="step" style="--sc: var(--l2)"><span class="tag">vpc &middot; no NAT</span><b>workloads-prod</b><small>private subnets, 0.0.0.0/0 &rarr; TGW</small></div>
+            </div>
+          </div>
+          <div class="arrow accent"><div class="lbl">attachments</div><div class="line"></div><div class="lbl">no dev&harr;prod route</div></div>
+          <div class="lane hl"><span class="lane-label">Hub &middot; shared-services</span>
+            <div class="step" style="--sc: var(--accent)"><span class="tag">transit gateway</span><b>Egress hub</b><small>workloads route table &rarr; egress VPC only</small></div>
+          </div>
+          <div class="arrow"><div class="line"></div></div>
+          <div class="lane"><span class="lane-label">Egress VPC</span>
+            <div class="step" style="--sc: var(--l1)"><span class="tag">nat + igw</span><b>NAT &rarr; Internet</b><small>one egress footprint for the org</small></div>
+          </div>
+        </div>
+        <p class="caption"><b>One egress footprint, hard isolation.</b> Centralizing NAT in a single VPC keeps cost and inspection in one place; the TGW route tables ensure dev and prod can reach the internet but never each other.</p>
+        <div class="notes">
+          <div class="note"><b>Flow logs to the archive</b><p>Every VPC ships flow logs (all traffic) to the security account's KMS-encrypted store, wired into the same audit backbone.</p></div>
+          <div class="note"><b>Cost lever</b><p>NAT is the largest idle cost. Per-AZ NAT gives HA; a single NAT is a documented dev-cheap option.</p></div>
+          <div class="note"><b>EKS-ready subnets</b><p>Private subnets are sized and tagged for Kubernetes, so the cluster and load balancers discover them with no retagging.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ EKS ============ -->
+    <section id="eks">
+      <div class="sec-head"><span class="sec-num">05</span><h2>EKS cluster internals</h2></div>
+      <p class="sec-sub">Inside refplatform-dev: modern auth via access entries (no aws-auth configmap), workload identity via Pod Identity (no node-role sharing), encrypted control plane and nodes.</p>
+      <div class="figure">
+        <div class="flow wrapy">
+          <div class="lane"><span class="lane-label">Who can administer</span>
+            <div class="col">
+              <div class="step" style="--sc: var(--l1)"><span class="tag">sso</span><b>Administrator role</b></div>
+              <div class="step" style="--sc: var(--l1)"><span class="tag">ci/cd</span><b>github-actions-deploy</b></div>
+            </div>
+          </div>
+          <div class="arrow accent"><div class="lbl">access entries<br>(API auth mode)</div><div class="line"></div><div class="lbl">ClusterAdmin</div></div>
+          <div class="lane hl"><span class="lane-label">refplatform-dev &middot; EKS 1.35</span>
+            <div class="col">
+              <div class="step" style="--sc: var(--accent)"><span class="tag">control plane</span><b>API server</b><small>private + IP-restricted public, secrets KMS-encrypted, control-plane logs on</small></div>
+              <div class="step" style="--sc: var(--l2)"><span class="tag">managed node group</span><b>System tier &middot; spot</b><small>IMDSv2 required, encrypted EBS, SSM (no SSH)</small></div>
+              <div class="step" style="--sc: var(--l2)"><span class="tag">add-ons</span><b>VPC CNI &middot; CoreDNS &middot; kube-proxy &middot; Pod Identity agent</b></div>
+            </div>
+          </div>
+          <div class="arrow"><div class="lbl">Pod Identity</div><div class="line"></div><div class="lbl">scoped IAM</div></div>
+          <div class="lane"><span class="lane-label">Workload identity</span>
+            <div class="step" style="--sc: var(--l3)"><span class="tag">pod &rarr; iam</span><b>AWS services</b><small>each pod gets its own role, not the node's</small></div>
+          </div>
+        </div>
+        <p class="caption"><b>Modern EKS throughout.</b> Identities are granted with access entries instead of the legacy aws-auth ConfigMap, and workloads get least-privilege IAM through Pod Identity rather than sharing the node instance role.</p>
+        <div class="notes">
+          <div class="note"><b>Private-first endpoint</b><p>Private access is always on; public is restricted to an admin CIDR and forbidden from being 0.0.0.0/0. Prod goes fully private.</p></div>
+          <div class="note"><b>Cheap by default</b><p>Spot capacity across several instance types, one-click teardown, and standard-support version to avoid the 6x extended-support rate.</p></div>
+          <div class="note"><b>GitOps-ready</b><p>The cluster is the foundation; Karpenter, Cilium, observability, policy, and Backstage land as ArgoCD increments on top.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- cross-cutting -->
+    <section>
+      <div class="sec-head"><span class="sec-num">//</span><h2>Principles at every layer</h2></div>
+      <div class="cross" style="margin-top:16px">
+        <div class="cc"><h4><span>[ 01 ]</span> Zero stored credentials</h4><p>SSO for humans, OIDC for CI, Pod Identity for workloads. No IAM users, no access keys, nowhere.</p></div>
+        <div class="cc"><h4><span>[ 02 ]</span> Tamper-resistant audit</h4><p>Validated org CloudTrail isolated in the security account, an SCP that forbids disabling it, and TLS-only, non-destroyable buckets.</p></div>
+        <div class="cc"><h4><span>[ 03 ]</span> Cheap &amp; destroyable</h4><p>Spot capacity, per-flag paid services, one-click teardown/rebuild, and $50-increment budget alarms. Idle cost trends to near-zero.</p></div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="legend">
+        <span class="k"><span class="dot" style="background:var(--live)"></span>Live</span>
+        <span class="k"><span class="dot" style="background:var(--wip)"></span>Foundation live / in progress</span>
+        <span class="k"><span class="dot" style="background:var(--planned)"></span>Planned</span>
+      </div>
+      <span style="margin-left:auto">Terraform &middot; AWS &middot; forkable &middot; generated from the refplatform repo</span>
+    </footer>
+
+  </div>
+</div>
