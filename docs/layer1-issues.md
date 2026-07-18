@@ -115,6 +115,38 @@ Services enabled for this platform: `sso`, `cloudtrail`, `guardduty`,
 - **Immediate unblock:** just re-run the apply, the TGW and share already exist
   and have propagated by the second run.
 
+## 7. single-NAT flag had no effect on a CI rebuild (uncommitted wiring)
+
+- **Stack:** `terraform/networking`
+- **Symptom:** a button rebuild came up with 3 NAT gateways (per-AZ), not the
+  intended 1, even with `egress_single_nat=true` passed. `terraform plan`
+  reported "No changes" in CI, but the identical plan locally wanted to destroy 2.
+- **Root cause:** the line wiring the egress module to the flag,
+  `single_nat_gateway = var.egress_single_nat` in `vpcs.tf`, was added in the
+  single-NAT change but never `git add`ed, so it lived only in the local working
+  tree. Local applies honored it (single NAT); CI, which checks out `main`, did
+  not (the module never received the flag, so it defaulted to per-AZ).
+- **How it was found:** state was identical in both (same serial + NAT count),
+  the CLI version was pinned the same, and `-var` was confirmed passed, so the
+  only remaining difference was the config. `git show HEAD:.../vpcs.tf` showed
+  the wiring was uncommitted (chased TF_VAR/`-var`/version dead ends first).
+- **Fix:** commit the wiring line.
+- **Prevention:** CI (`main`), not the local working tree, is the source of
+  truth. When a change works locally but not in CI, diff `git show HEAD:<file>`
+  against local before blaming Terraform, variables, or versions.
+
+## 8. NAT deletion: EIP release races the ENI teardown
+
+- **Stack:** `terraform/networking`
+- **Symptom:** reducing the NAT tier (3 to 1) destroyed the NAT gateways but then
+  failed releasing their EIPs: `ReleaseAddress ... InvalidNetworkInterfaceID.NotFound:
+  The networkInterface ID 'eni-...' does not exist`.
+- **Root cause:** deleting a NAT gateway removes its ENI; releasing the EIP right
+  after races that teardown (the EIP still references the now-gone ENI). Eventual
+  consistency.
+- **Fix:** re-run the apply. The NATs are already gone, so the second pass
+  releases the orphaned EIPs cleanly.
+
 ## Operational notes
 
 - **SSO session expiry vs. background jobs.** A background retry loop for the
@@ -124,3 +156,12 @@ Services enabled for this platform: `sso`, `cloudtrail`, `guardduty`,
 - **Partial applies are normal here.** Several stacks applied most resources and
   failed on one org-service quirk; re-applying after the fix created only the
   remaining resource (state already held the rest).
+- **Stale state lock from a cancelled run.** A `terraform` step cancelled
+  mid-operation can leave the S3 native lock (`use_lockfile`) behind as a
+  `<key>.tflock` object, so the next run fails with "Error acquiring the state
+  lock". Clear it with
+  `aws s3 rm s3://<state-bucket>/<stack>/terraform.tfstate.tflock` (or
+  `terraform force-unlock <id>`).
+- **Pin the Terraform CLI in CI.** `hashicorp/setup-terraform` defaults to
+  `latest`; pin `terraform_version` so runs are reproducible and match the
+  version the config is developed and tested against.
