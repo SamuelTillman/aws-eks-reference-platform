@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/remind-log-issue.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking output for failure signatures"
+          }
+        ]
+      }
+    ]
+  }
+}
