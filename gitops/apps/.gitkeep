@@ -1,0 +1,3 @@
+# Child ArgoCD Application manifests land here (Karpenter first, then Cilium,
+# observability, Kyverno, Backstage). The root app (terraform/argocd) watches
+# this directory with recurse=true. Empty until the first component increment.
