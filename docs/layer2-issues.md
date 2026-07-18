@@ -83,3 +83,30 @@ have to rediscover any of these. See also
   bootstrap cluster-admin; the SSO Administrator role is also a cluster-admin
   access entry. An expired SSO token presents the same hang, so check
   `aws sts get-caller-identity` first.
+
+## 5. ArgoCD port-forward: reach it over HTTP, not HTTPS
+
+- **Where:** reaching the ArgoCD UI via `kubectl -n argocd port-forward
+  svc/argocd-server 8080:443`.
+- **Symptom:** the port-forward listens and `kubectl get`/`logs` work, but every
+  browser/curl request to `https://localhost:8080` returns nothing (curl "HTTP
+  000"), and the port-forward logs `an error occurred forwarding 8080 -> 8080:
+  ... read: connection reset by peer`. The `argocd-server` pod is `1/1` Ready with
+  0 restarts and healthy logs, so it looks like the tunnel is broken when it is
+  not.
+- **Root cause:** the argo-cd Helm install runs the server in **insecure mode**
+  (`server.insecure: "true"` in `argocd-cmd-params-cm`), i.e. it serves **plain
+  HTTP** on container port 8080 (TLS is meant to be terminated by an ingress, a
+  later increment, ADR-0010 §4). Hitting it with `https://` sends a TLS
+  ClientHello to a plaintext listener, which reads the handshake bytes as a bad
+  request and **resets the connection**, so the TLS handshake never completes and
+  the client sees nothing. Isolation proof: port-forwarding the *same pod's*
+  metrics port 8083 (plain HTTP) returned 200, only the 8080 request over TLS
+  reset.
+- **Fix:** use **`http://localhost:8080`** (not https). Login `admin` /
+  (`kubectl -n argocd get secret argocd-initial-admin-secret -o
+  jsonpath='{.data.password}' | base64 -d`).
+- **Prevention:** until an ingress terminates TLS, ArgoCD is HTTP-only over the
+  port-forward. A "connection reset by peer" on a healthy pod after an HTTPS
+  request is the tell that the listener is plaintext, retry with `http://` before
+  suspecting the tunnel, creds, or the endpoint allowlist.
