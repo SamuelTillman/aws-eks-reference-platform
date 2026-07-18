@@ -16,9 +16,9 @@ variable "state_bucket" {
 }
 
 variable "cluster_version" {
-  description = "EKS control-plane minor version. Pin it; upgrades are deliberate, plan-reviewed changes."
+  description = "EKS control-plane minor version. Pin it; upgrades are deliberate, plan-reviewed changes. Keep it in standard support (an end-of-life minor bills at the ~6x extended-support rate)."
   type        = string
-  default     = "1.31"
+  default     = "1.35"
 }
 
 # --- Endpoint access (ADR-0007 decision 4) ----------------------------------

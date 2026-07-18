@@ -43,6 +43,16 @@ jobs:
     environment: platform-lifecycle
     env:
       TF_VAR_state_bucket: ${{ secrets.TF_STATE_BUCKET }}
+      # Dev-environment profile so a button REBUILD reproduces the optimized
+      # cluster (code defaults stay reference-neutral; these override for this
+      # environment). Undeclared TF_VAR_* are ignored by stacks that don't use
+      # them. Sensitive values (admin egress IP, admin role ARNs) come from
+      # secrets so no personal IP or account ID lands in the workflow.
+      TF_VAR_node_capacity_type: "SPOT"
+      TF_VAR_node_instance_types: '["t3.large","t3a.large","m5.large","m5a.large"]'
+      TF_VAR_egress_single_nat: "true"
+      TF_VAR_public_access_cidrs: ${{ secrets.EKS_PUBLIC_ACCESS_CIDRS }}
+      TF_VAR_cluster_admin_principal_arns: ${{ secrets.EKS_ADMIN_PRINCIPAL_ARNS }}
     steps:
       - uses: actions/checkout@v4
 
