@@ -1,0 +1,42 @@
+# How Karpenter launches nodes: AMI, instance profile, subnets, SGs, disk (ADR-0011).
+# Subnets and security groups are selected by the karpenter.sh/discovery tag that
+# terraform/eks/karpenter.tf stamps on the dev private subnets + cluster SG, so no
+# account-specific IDs live in Git.
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: default
+spec:
+  # AL2023, latest recommended AMI (alias implies the amiFamily in v1).
+  amiSelectorTerms:
+    - alias: al2023@latest
+
+  # Pre-created by Terraform (spec.instanceProfile, not spec.role) so the
+  # controller policy needs no instance-profile management permissions.
+  instanceProfile: refplatform-dev-karpenter-node
+
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: refplatform-dev
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: refplatform-dev
+
+  # IMDSv2 required, hop limit 1 so a pod/SSRF cannot reach node credentials
+  # (matches the system node group launch template, ADR-0009).
+  metadataOptions:
+    httpEndpoint: enabled
+    httpTokens: required
+    httpPutResponseHopLimit: 1
+
+  # Encrypted gp3 root volume (ADR-0009).
+  blockDeviceMappings:
+    - deviceName: /dev/xvda
+      ebs:
+        volumeSize: 50Gi
+        volumeType: gp3
+        encrypted: true
+        deleteOnTermination: true
+
+  tags:
+    platform.refplatform/tier: karpenter

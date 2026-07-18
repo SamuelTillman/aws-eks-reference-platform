@@ -40,3 +40,4 @@ Want the background on the format? See Michael Nygard's original write-up:
 | [0008](0008-cicd-lifecycle-teardown-rebuild.md) | Push-button teardown/rebuild (CI-driven apply/destroy lifecycle) + budget alarms | Accepted |
 | [0009](0009-audit-hardening.md) | Audit hardening: preventive SCP, S3 Object Lock, TLS-only, Config conformance pack, IMDSv2 | Accepted |
 | [0010](0010-gitops-argocd.md) | GitOps delivery with ArgoCD: Terraform-bootstrapped, app-of-apps from the repo | Accepted |
+| [0011](0011-karpenter-autoscaling.md) | Node autoscaling with Karpenter, spot-first + consolidating, delivered by GitOps | Accepted |

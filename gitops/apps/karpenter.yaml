@@ -1,0 +1,48 @@
+# Karpenter controller (ADR-0011), the first real GitOps-delivered component.
+# The Helm chart from public ECR; its AWS prerequisites (IAM via Pod Identity,
+# SQS interruption queue, discovery tags) are Terraform in the eks stack.
+# sync-wave 0: installs the CRDs (NodePool, EC2NodeClass) that karpenter-nodepool
+# (sync-wave 1) then depends on.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: karpenter
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: public.ecr.aws/karpenter
+    chart: karpenter
+    targetRevision: "1.14.0"
+    helm:
+      releaseName: karpenter
+      valuesObject:
+        settings:
+          clusterName: refplatform-dev
+          # SQS queue created by terraform/eks/karpenter.tf
+          interruptionQueue: refplatform-dev-karpenter
+        # The controller must run on the stable system node group, never on a
+        # node it manages (or it could delete the node hosting itself).
+        nodeSelector:
+          platform.refplatform/tier: system
+        controller:
+          resources:
+            requests:
+              cpu: "1"
+              memory: 1Gi
+            limits:
+              memory: 1Gi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: karpenter
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

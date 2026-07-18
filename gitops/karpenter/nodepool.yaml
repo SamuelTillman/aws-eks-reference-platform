@@ -1,0 +1,46 @@
+# The default workload NodePool (ADR-0011): spot-first, broad instance choice so
+# Karpenter can bin-pack the cheapest fit, actively consolidating idle capacity.
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: default
+spec:
+  template:
+    metadata:
+      labels:
+        platform.refplatform/tier: karpenter
+    spec:
+      nodeClassRef:
+        group: karpenter.k8s.aws
+        kind: EC2NodeClass
+        name: default
+      # Recycle nodes after 30 days for a fresh, patched AMI.
+      expireAfter: 720h
+      requirements:
+        - key: kubernetes.io/os
+          operator: In
+          values: ["linux"]
+        - key: kubernetes.io/arch
+          operator: In
+          values: ["amd64"]
+        # Spot only: the cheapest capacity. Interruptions are handled gracefully
+        # via the SQS queue wired in terraform/eks/karpenter.tf.
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ["spot"]
+        # General-purpose families, newer generations = wide, cheap selection.
+        - key: karpenter.k8s.aws/instance-category
+          operator: In
+          values: ["c", "m", "r"]
+        - key: karpenter.k8s.aws/instance-generation
+          operator: Gt
+          values: ["2"]
+  disruption:
+    # Repack and remove nodes that are empty OR underutilized, the biggest
+    # "cheap when idle" lever.
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    consolidateAfter: 1m
+  limits:
+    # Cost blast-radius cap: a runaway workload cannot scale the account into
+    # oblivion. Deliberately low reference ceiling; raise it knowingly.
+    cpu: "100"
