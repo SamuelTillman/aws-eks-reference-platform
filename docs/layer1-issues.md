@@ -97,6 +97,24 @@ Services enabled for this platform: `sso`, `cloudtrail`, `guardduty`,
 - **Prevention:** read destroy/replace plans in full before applying, even for a
   one-line change; a "known after apply" on a data source can force replacements.
 
+## 6. TGW rebuild: cross-account attachment races RAM propagation
+
+- **Stack:** `terraform/networking`
+- **Symptom:** on a rebuild, `aws_ec2_transit_gateway_vpc_attachment.dev/.prod`
+  fail with `InvalidTransitGatewayID.NotFound: Transit Gateway tgw-... was deleted
+  or does not exist`, even though the TGW was just created. Passed on the first
+  deploy, raced on a faster rebuild.
+- **Root cause:** the TGW lives in `shared-services` and is shared to the workload
+  accounts via RAM. The attachments run in the workload accounts and already
+  `depends_on` the `aws_ram_principal_association`, but RAM sharing is eventually
+  consistent: the association returns before the shared TGW is visible in the
+  target account, so an attachment created immediately after cannot find it.
+- **Fix:** a `time_sleep.ram_propagation` (45s) between the RAM associations and
+  the cross-account attachments (needs the `hashicorp/time` provider). Ordering
+  via `depends_on` was not enough; propagation needs a brief wait.
+- **Immediate unblock:** just re-run the apply, the TGW and share already exist
+  and have propagated by the second run.
+
 ## Operational notes
 
 - **SSO session expiry vs. background jobs.** A background retry loop for the
