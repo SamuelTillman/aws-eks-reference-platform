@@ -1,5 +1,8 @@
 name: Platform Lifecycle (apply / destroy)
 
+# The run title shows exactly what is being done, e.g. "Lifecycle: destroy eks".
+run-name: "Lifecycle: ${{ inputs.action }} ${{ inputs.stack }}${{ inputs.action == 'destroy' && format(' [confirm={0}]', inputs.confirm) || '' }}"
+
 # Manual-only teardown/rebuild of the REBUILDABLE layers (ADR-0008). Never runs
 # on push or PR. bootstrap/org/identity/logging are never targets. This is the
 # one deliberate exception to plan-only CI: the plan is printed before acting,
@@ -37,6 +40,7 @@ env:
 
 jobs:
   lifecycle:
+    name: "${{ github.event.inputs.action }} ${{ github.event.inputs.stack }}"
     runs-on: ubuntu-latest
     # Add a required reviewer to this environment in repo settings for a human
     # gate on every run (see ADR-0008). Until then it runs without approval.
