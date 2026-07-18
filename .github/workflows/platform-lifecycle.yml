@@ -157,7 +157,8 @@ jobs:
           # TF_VAR_ env (a bool TF_VAR_ env value is not reliably honored, unlike
           # string vars). Empty for the other stacks.
           EXTRA=""
-          if [ "$STACK" = "networking" ]; then EXTRA="-var=egress_single_nat=true"; fi
+          if [ "$STACK" = "networking" ]; then EXTRA="-var egress_single_nat=true"; fi
+          echo "== lifecycle: stack=[$STACK] action=[$ACTION] extra=[$EXTRA] =="
 
           if [ "$STACK" = "security" ]; then
             # security is toggled by enable_* flags, never terraform-destroyed
