@@ -110,3 +110,28 @@ have to rediscover any of these. See also
   port-forward. A "connection reset by peer" on a healthy pod after an HTTPS
   request is the tell that the listener is plaintext, retry with `http://` before
   suspecting the tunnel, creds, or the endpoint allowlist.
+
+## 6. Karpenter controller: iam:ListInstanceProfiles AccessDenied (fixed)
+
+- **Where:** `terraform/eks/karpenter.tf`, the Karpenter controller IAM policy
+  ([ADR-0011](adr/0011-karpenter-autoscaling.md)).
+- **Symptom:** the controller ran and provisioned nodes fine, but its log looped
+  `AccessDenied ... iam:ListInstanceProfiles` every few seconds from the
+  `instanceprofile.garbagecollection` reconciler.
+- **Root cause:** the design pre-creates the node instance profile and pins it on
+  the EC2NodeClass (`spec.instanceProfile`) to keep instance-profile *management*
+  out of the controller policy. That removed Create/Delete/Add/Remove/Tag, but
+  Karpenter v1.14 still runs an instance-profile **garbage collector** that calls
+  `iam:ListInstanceProfiles` (by path prefix) regardless of whether the profile is
+  static. The policy granted `GetInstanceProfile` but not `ListInstanceProfiles`,
+  so the GC loop 403'd. Non-fatal (the launch path uses the static profile +
+  `GetInstanceProfile`), but a broken controller spamming AccessDenied is not
+  acceptable for an audit-reference platform.
+- **Fix:** add `iam:ListInstanceProfiles` (Resource `*`, an account-level read
+  that does not take a resource ARN). Errors cleared within ~30s of apply.
+- **Prevention:** even with a static `spec.instanceProfile`, Karpenter v1 needs
+  `iam:ListInstanceProfiles` for its GC controller. When translating the upstream
+  controller policy, keep the read/list actions (`GetInstanceProfile`,
+  `ListInstanceProfiles`) even if you drop the management ones. Verify by tailing
+  the controller log for `AccessDenied` after the first apply, not just by
+  checking that a node launches.

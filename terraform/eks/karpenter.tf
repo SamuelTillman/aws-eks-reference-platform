@@ -267,6 +267,15 @@ resource "aws_iam_role_policy" "karpenter_controller" {
         Action   = "iam:GetInstanceProfile"
       },
       {
+        # Karpenter's instance-profile garbage collector lists profiles by path
+        # prefix even when the profile is static (spec.instanceProfile). List is
+        # an account-level read that does not take a resource ARN, hence "*".
+        Sid      = "AllowInstanceProfileListAction"
+        Effect   = "Allow"
+        Resource = "*"
+        Action   = "iam:ListInstanceProfiles"
+      },
+      {
         Sid      = "AllowAPIServerEndpointDiscovery"
         Effect   = "Allow"
         Resource = aws_eks_cluster.this.arn
