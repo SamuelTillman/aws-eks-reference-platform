@@ -157,14 +157,11 @@ jobs:
           set -euo pipefail
           STACK="${{ github.event.inputs.stack }}"
           ACTION="${{ github.event.inputs.action }}"
-          # networking's single-NAT is a BOOL var; pass it as -var, not via a
-          # TF_VAR_ env (a bool TF_VAR_ env value is not reliably honored, unlike
-          # string vars). Empty for the other stacks.
+          # networking's dev profile uses a single NAT (cheaper), passed as
+          # -var. Empty for the other stacks (egress_single_nat is undeclared
+          # there, and -var of an undeclared variable errors).
           EXTRA=""
-          if [ "$STACK" = "networking" ]; then
-            EXTRA="-var egress_single_nat=true"
-            echo "DEBUG-NAT state_nats=[$(terraform state list 2>/dev/null | grep -c nat_gateway)] state_serial=[$(terraform state pull 2>/dev/null | grep -o '\"serial\": *[0-9]*' | head -1)]"
-          fi
+          if [ "$STACK" = "networking" ]; then EXTRA="-var egress_single_nat=true"; fi
 
           if [ "$STACK" = "security" ]; then
             # security is toggled by enable_* flags, never terraform-destroyed

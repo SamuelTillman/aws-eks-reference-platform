@@ -11,6 +11,7 @@ module "vpc_egress" {
   cidr_block               = local.cidrs.egress
   azs                      = var.azs
   create_nat_gateways      = true
+  single_nat_gateway       = var.egress_single_nat
   enable_flow_logs         = var.enable_flow_logs
   flow_log_destination_arn = one(aws_s3_bucket.flow_logs[*].arn)
 }
