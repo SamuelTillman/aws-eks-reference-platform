@@ -124,4 +124,14 @@ jobs:
 
       - name: Terraform plan
         working-directory: terraform/${{ matrix.stack }}
-        run: terraform plan -input=false -no-color
+        run: |
+          # Stacks that manage in-cluster resources (Helm/Kubernetes providers)
+          # can't be planned from CI: they need reachability to the IP-restricted
+          # EKS API endpoint, which runners don't have. fmt/validate still cover
+          # them; the real plan happens locally before apply.
+          case "${{ matrix.stack }}" in
+            argocd)
+              echo "::notice::Skipping cloud plan for '${{ matrix.stack }}' (needs cluster API access, not available in CI). Covered by fmt/validate." ;;
+            *)
+              terraform plan -input=false -no-color ;;
+          esac
