@@ -163,7 +163,7 @@ jobs:
           EXTRA=""
           if [ "$STACK" = "networking" ]; then
             EXTRA="-var egress_single_nat=true"
-            echo "DEBUG-NAT state_nats=[$(terraform state list 2>/dev/null | grep -c nat_gateway)] resolved=[$(echo 'var.egress_single_nat' | terraform console $EXTRA 2>/dev/null | tail -1)] bucket=[${TF_VAR_state_bucket:0:22}...]"
+            echo "DEBUG-NAT state_nats=[$(terraform state list 2>/dev/null | grep -c nat_gateway)] state_serial=[$(terraform state pull 2>/dev/null | grep -o '\"serial\": *[0-9]*' | head -1)]"
           fi
 
           if [ "$STACK" = "security" ]; then
