@@ -15,11 +15,43 @@ A forkable reference implementation of an AWS organization hosting a Kubernetes 
 | 4 | Sample workload: fishing-charter SaaS + data pipeline + Bedrock RAG service | Planned |
 | 5 | Architecture docs: full ADR log, threat model, FinOps dashboard | Planned |
 
-**Visual architecture:** [`docs/architecture.html`](docs/architecture.html) is a
-self-contained, theme-aware diagram (open it in a browser, or serve `docs/` with
-GitHub Pages). It maps every layer, then walks the flows that make it work: the
-zero-secret credential path, the write-isolated audit trail, centralized-egress
-networking, and the EKS cluster internals.
+### Architecture at a glance
+
+```mermaid
+flowchart TB
+    users["Developers and CI"]
+
+    subgraph org["AWS Organization, 5 accounts"]
+        direction TB
+        mgmt["management<br/>org root, SSO, billing<br/>TF state, GitHub OIDC"]
+        sec["security<br/>CloudTrail archive, Config aggregator<br/>GuardDuty / Security Hub, delegated admin"]
+        shared["shared-services<br/>Transit Gateway egress hub<br/>central ECR, deploy roles"]
+        wdev["workloads-dev<br/>EKS: refplatform-dev (live)"]
+        wprod["workloads-prod<br/>EKS"]
+    end
+
+    inet["Internet"]
+
+    users -->|"SSO / GitHub OIDC, no stored secrets"| mgmt
+    mgmt -->|"delegates admin"| sec
+    wdev -->|"CloudTrail, Config, flow logs"| sec
+    wprod -->|"CloudTrail, Config, flow logs"| sec
+    wdev -->|"0.0.0.0/0 via TGW"| shared
+    wprod -->|"0.0.0.0/0 via TGW"| shared
+    shared -->|"centralized NAT egress"| inet
+
+    classDef acct fill:#0f2a33,stroke:#37b3bf,color:#e7ebf2;
+    classDef hub fill:#132a24,stroke:#46b58a,color:#e7ebf2;
+    classDef ext fill:#1a2130,stroke:#4b87c4,color:#e7ebf2;
+    class mgmt,sec,wdev,wprod acct;
+    class shared hub;
+    class users,inet ext;
+```
+
+For the full visual reference (a layered map plus deep-dive flows: the zero-secret
+credential path, the write-isolated audit trail, centralized-egress networking, and
+the EKS cluster internals), see the **[architecture page](https://samueltillman.github.io/aws-eks-reference-platform/)**
+(rendered via GitHub Pages).
 
 ## Design principles
 
