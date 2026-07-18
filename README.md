@@ -15,6 +15,12 @@ A forkable reference implementation of an AWS organization hosting a Kubernetes 
 | 4 | Sample workload: fishing-charter SaaS + data pipeline + Bedrock RAG service | Planned |
 | 5 | Architecture docs: full ADR log, threat model, FinOps dashboard | Planned |
 
+**Visual architecture:** [`docs/architecture.html`](docs/architecture.html) is a
+self-contained, theme-aware diagram (open it in a browser, or serve `docs/` with
+GitHub Pages). It maps every layer, then walks the flows that make it work: the
+zero-secret credential path, the write-isolated audit trail, centralized-egress
+networking, and the EKS cluster internals.
+
 ## Design principles
 
 1. **Zero stored credentials.** GitHub Actions authenticates to AWS via OIDC. Workloads use IAM roles. Humans use IAM Identity Center SSO. There aren't any IAM users or access keys anywhere in this organization.
