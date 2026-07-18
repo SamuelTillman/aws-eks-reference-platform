@@ -39,6 +39,19 @@ resource "aws_ram_principal_association" "workloads" {
   resource_share_arn = aws_ram_resource_share.tgw.arn
 }
 
+# RAM sharing is eventually consistent: the principal association returns before
+# the shared TGW is visible in the workload accounts, so a cross-account
+# attachment created immediately after can fail with InvalidTransitGatewayID.
+# NotFound (raced on a fast rebuild). Wait for the share to propagate. See
+# docs/layer1-issues.md.
+resource "time_sleep" "ram_propagation" {
+  depends_on = [
+    aws_ram_resource_association.tgw,
+    aws_ram_principal_association.workloads,
+  ]
+  create_duration = "45s"
+}
+
 # --- Attachments (each in its owning account) --------------------------------
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "egress" {
@@ -57,7 +70,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "dev" {
   subnet_ids         = module.vpc_dev.private_subnet_ids
 
   tags       = { Name = "${var.name_prefix}-dev" }
-  depends_on = [aws_ram_principal_association.workloads]
+  depends_on = [time_sleep.ram_propagation]
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "prod" {
@@ -67,7 +80,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "prod" {
   subnet_ids         = module.vpc_prod.private_subnet_ids
 
   tags       = { Name = "${var.name_prefix}-prod" }
-  depends_on = [aws_ram_principal_association.workloads]
+  depends_on = [time_sleep.ram_propagation]
 }
 
 # --- TGW route tables (owner-managed, in shared-services) --------------------
