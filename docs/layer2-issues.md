@@ -60,3 +60,26 @@ have to rediscover any of these. See also
   `github.repository_owner_id`, `github.repository_id`). Forkable and always
   matches the running repo; undeclared `TF_VAR_*` are ignored by other stacks.
 - **Status:** fixed.
+
+## 4. kubectl access: the --role-arn kubeconfig exec hangs
+
+- **Where:** connecting to the `refplatform-dev` cluster from a workstation.
+- **Symptom:** `aws eks update-kubeconfig --role-arn <OrganizationAccountAccessRole>`
+  writes a working kubeconfig, but every `kubectl` call then hangs (the per-call
+  `aws eks get-token --role-arn ...` exec did not return). The cluster itself was
+  healthy: its endpoint resolved to public IPs and `/livez` returned 200 in
+  &lt;0.5s, and the admin IP was on the endpoint allowlist.
+- **Fix that works:** assume the account role once, export the temporary
+  credentials, and run `update-kubeconfig` WITHOUT `--role-arn` so the exec uses
+  the ambient creds:
+  ```sh
+  creds=$(aws sts assume-role --role-arn arn:aws:iam::<workloads-dev>:role/OrganizationAccountAccessRole \
+            --role-session-name kubectl --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text)
+  export AWS_ACCESS_KEY_ID=$(echo "$creds"|cut -f1) AWS_SECRET_ACCESS_KEY=$(echo "$creds"|cut -f2) AWS_SESSION_TOKEN=$(echo "$creds"|cut -f3)
+  aws eks update-kubeconfig --name refplatform-dev --region us-east-1
+  kubectl get nodes
+  ```
+- **Note:** the cluster creator (the assumed OrganizationAccountAccessRole) is the
+  bootstrap cluster-admin; the SSO Administrator role is also a cluster-admin
+  access entry. An expired SSO token presents the same hang, so check
+  `aws sts get-caller-identity` first.

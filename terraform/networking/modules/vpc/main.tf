@@ -79,15 +79,26 @@ resource "aws_route_table_association" "public" {
 }
 
 # --- NAT (egress VPC only) --------------------------------------------------
+# Per-AZ NAT by default (one per public subnet) for HA egress. single_nat_gateway
+# collapses to one NAT in the first AZ: cheaper (saves the other AZs' hourly cost)
+# at the cost of AZ-independent egress. Sensible for dev/reference (ADR-0008 cost).
+
+locals {
+  public_keys = sort(keys(aws_subnet.public))
+  nat_keys = var.create_nat_gateways ? (
+    var.single_nat_gateway ? slice(local.public_keys, 0, 1) : local.public_keys
+  ) : []
+  nat_subnets = { for k in local.nat_keys : k => aws_subnet.public[k] }
+}
 
 resource "aws_eip" "nat" {
-  for_each = var.create_nat_gateways ? aws_subnet.public : {}
+  for_each = local.nat_subnets
   domain   = "vpc"
   tags     = merge(var.tags, { Name = "${var.name}-nat-${each.key}" })
 }
 
 resource "aws_nat_gateway" "this" {
-  for_each      = var.create_nat_gateways ? aws_subnet.public : {}
+  for_each      = local.nat_subnets
   allocation_id = aws_eip.nat[each.key].id
   subnet_id     = each.value.id
   tags          = merge(var.tags, { Name = "${var.name}-nat-${each.key}" })
@@ -109,7 +120,9 @@ resource "aws_route" "private_nat" {
   for_each               = var.create_nat_gateways ? aws_subnet.private : {}
   route_table_id         = aws_route_table.private[each.key].id
   destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = aws_nat_gateway.this[each.key].id
+  # Single NAT: every private subnet routes to the one NAT (cross-AZ for the
+  # others). Per-AZ NAT: each subnet routes to the NAT in its own AZ.
+  nat_gateway_id = aws_nat_gateway.this[var.single_nat_gateway ? local.nat_keys[0] : each.key].id
 }
 
 resource "aws_route_table_association" "private" {
