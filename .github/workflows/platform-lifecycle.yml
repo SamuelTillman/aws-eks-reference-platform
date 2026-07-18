@@ -12,14 +12,14 @@ on:
         description: "Which layer to act on"
         required: true
         type: choice
-        options: [networking, eks, security]
+        options: [networking, eks, argocd, security]
       action:
         description: "apply = create/rebuild (for security, restore monitoring); destroy = tear down (for security, stand down monitoring)"
         required: true
         type: choice
         options: [apply, destroy]
       confirm:
-        description: "To DESTROY, type the stack name exactly (networking / eks / security). Ignored for apply."
+        description: "To DESTROY, type the stack name exactly (networking / eks / argocd / security). Ignored for apply."
         required: false
         type: string
 
@@ -53,6 +53,9 @@ jobs:
       TF_VAR_egress_single_nat: "true"
       TF_VAR_public_access_cidrs: ${{ secrets.EKS_PUBLIC_ACCESS_CIDRS }}
       TF_VAR_cluster_admin_principal_arns: ${{ secrets.EKS_ADMIN_PRINCIPAL_ARNS }}
+      # Pinned Helm chart versions for the argocd stack (public, non-sensitive).
+      TF_VAR_argocd_chart_version: "10.1.4"
+      TF_VAR_argocd_apps_chart_version: "2.0.5"
     steps:
       - uses: actions/checkout@v4
 
@@ -92,6 +95,47 @@ jobs:
           fi
           echo "No EKS clusters present; safe to destroy networking."
 
+      # argocd lives inside the cluster, whose API endpoint is private + IP-
+      # restricted. Temporarily add THIS runner's IP so Terraform can reach it,
+      # then remove it again in the always() step below. If the cluster is gone
+      # (destroy after eks teardown), skip and just clear state.
+      - name: Open cluster endpoint for argocd
+        if: ${{ github.event.inputs.stack == 'argocd' }}
+        run: |
+          set -euo pipefail
+          DEV=$(aws organizations list-accounts --query "Accounts[?Name=='workloads-dev'].Id | [0]" --output text)
+          ROLE="arn:aws:iam::$DEV:role/OrganizationAccountAccessRole"
+          wd() { local c; c=$(aws sts assume-role --role-arn "$ROLE" --role-session-name argo-ip \
+            --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text); \
+            AWS_ACCESS_KEY_ID=$(echo "$c"|cut -f1) AWS_SECRET_ACCESS_KEY=$(echo "$c"|cut -f2) AWS_SESSION_TOKEN=$(echo "$c"|cut -f3) aws "$@"; }
+
+          if ! wd eks describe-cluster --name refplatform-dev --region "$AWS_REGION" >/dev/null 2>&1; then
+            if [ "${{ github.event.inputs.action }}" = "destroy" ]; then
+              echo "STATE_RM_ONLY=true" >> "$GITHUB_ENV"
+              echo "Cluster gone; argocd destroy will just forget the releases in state."
+              exit 0
+            fi
+            echo "::error::Cluster refplatform-dev not found. Apply the eks stack first."; exit 1
+          fi
+
+          RUNNER_IP="$(curl -s https://checkip.amazonaws.com)/32"
+          ORIG=$(wd eks describe-cluster --name refplatform-dev --region "$AWS_REGION" \
+            --query 'cluster.resourcesVpcConfig.publicAccessCidrs' --output text | tr '\t' ',')
+          echo "::add-mask::$RUNNER_IP"
+          for c in $(echo "$ORIG" | tr ',' ' '); do echo "::add-mask::$c"; done
+          echo "ORIG_CIDRS=$ORIG" >> "$GITHUB_ENV"
+
+          UPD=$(wd eks update-cluster-config --name refplatform-dev --region "$AWS_REGION" \
+            --resources-vpc-config "publicAccessCidrs=$ORIG,$RUNNER_IP" --query 'update.id' --output text)
+          echo "Added runner IP; waiting for the endpoint update to apply..."
+          for i in $(seq 1 40); do
+            us=$(wd eks describe-update --name refplatform-dev --region "$AWS_REGION" --update-id "$UPD" --query 'update.status' --output text)
+            [ "$us" = "Successful" ] && break
+            case "$us" in Failed|Cancelled) echo "::error::endpoint update $us"; exit 1;; esac
+            sleep 10
+          done
+          echo "ENDPOINT_OPENED=true" >> "$GITHUB_ENV"
+
       - uses: hashicorp/setup-terraform@v3
 
       - name: Terraform init
@@ -114,6 +158,22 @@ jobs:
             terraform plan $VARS -input=false -no-color
             echo "== apply =="
             terraform apply $VARS -input=false -no-color -auto-approve
+          elif [ "$STACK" = "argocd" ]; then
+            if [ "${STATE_RM_ONLY:-}" = "true" ]; then
+              # cluster already gone: the releases died with it, just drop state
+              echo "== argocd: forgetting releases in state (cluster gone) =="
+              terraform state rm helm_release.root_app helm_release.argocd 2>/dev/null || true
+            elif [ "$ACTION" = "destroy" ]; then
+              echo "== argocd destroy plan =="
+              terraform plan -destroy -input=false -no-color
+              echo "== destroy =="
+              terraform destroy -input=false -no-color -auto-approve
+            else
+              echo "== argocd plan =="
+              terraform plan -input=false -no-color
+              echo "== apply =="
+              terraform apply -input=false -no-color -auto-approve
+            fi
           elif [ "$ACTION" = "destroy" ]; then
             echo "== $STACK destroy plan =="
             terraform plan -destroy -input=false -no-color
@@ -125,3 +185,17 @@ jobs:
             echo "== apply =="
             terraform apply -input=false -no-color -auto-approve
           fi
+
+      # Always remove the runner IP from the endpoint, even if Terraform failed.
+      - name: Restore cluster endpoint (argocd)
+        if: ${{ always() && github.event.inputs.stack == 'argocd' && env.ENDPOINT_OPENED == 'true' }}
+        run: |
+          DEV=$(aws organizations list-accounts --query "Accounts[?Name=='workloads-dev'].Id | [0]" --output text)
+          ROLE="arn:aws:iam::$DEV:role/OrganizationAccountAccessRole"
+          wd() { local c; c=$(aws sts assume-role --role-arn "$ROLE" --role-session-name argo-ip-restore \
+            --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text); \
+            AWS_ACCESS_KEY_ID=$(echo "$c"|cut -f1) AWS_SECRET_ACCESS_KEY=$(echo "$c"|cut -f2) AWS_SESSION_TOKEN=$(echo "$c"|cut -f3) aws "$@"; }
+          echo "Restoring the endpoint allowlist (removing the runner IP)."
+          wd eks update-cluster-config --name refplatform-dev --region "$AWS_REGION" \
+            --resources-vpc-config "publicAccessCidrs=$ORIG_CIDRS" >/dev/null \
+            || echo "::warning::could not restore publicAccessCidrs; verify the endpoint allowlist manually."
