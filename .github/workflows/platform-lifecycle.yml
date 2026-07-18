@@ -54,7 +54,8 @@ jobs:
       # secrets so no personal IP or account ID lands in the workflow.
       TF_VAR_node_capacity_type: "SPOT"
       TF_VAR_node_instance_types: '["t3.large","t3a.large","m5.large","m5a.large"]'
-      TF_VAR_egress_single_nat: "true"
+      # egress_single_nat (a bool) is passed as -var in the networking step, not
+      # here: a bool TF_VAR_ env value is not reliably honored.
       TF_VAR_public_access_cidrs: ${{ secrets.EKS_PUBLIC_ACCESS_CIDRS }}
       TF_VAR_cluster_admin_principal_arns: ${{ secrets.EKS_ADMIN_PRINCIPAL_ARNS }}
       # Pinned Helm chart versions for the argocd stack (public, non-sensitive).
@@ -152,6 +153,11 @@ jobs:
           set -euo pipefail
           STACK="${{ github.event.inputs.stack }}"
           ACTION="${{ github.event.inputs.action }}"
+          # networking's single-NAT is a BOOL var; pass it as -var, not via a
+          # TF_VAR_ env (a bool TF_VAR_ env value is not reliably honored, unlike
+          # string vars). Empty for the other stacks.
+          EXTRA=""
+          if [ "$STACK" = "networking" ]; then EXTRA="-var=egress_single_nat=true"; fi
 
           if [ "$STACK" = "security" ]; then
             # security is toggled by enable_* flags, never terraform-destroyed
@@ -180,14 +186,14 @@ jobs:
             fi
           elif [ "$ACTION" = "destroy" ]; then
             echo "== $STACK destroy plan =="
-            terraform plan -destroy -input=false -no-color
+            terraform plan -destroy $EXTRA -input=false -no-color
             echo "== destroy =="
-            terraform destroy -input=false -no-color -auto-approve
+            terraform destroy $EXTRA -input=false -no-color -auto-approve
           else
             echo "== $STACK plan =="
-            terraform plan -input=false -no-color
+            terraform plan $EXTRA -input=false -no-color
             echo "== apply =="
-            terraform apply -input=false -no-color -auto-approve
+            terraform apply $EXTRA -input=false -no-color -auto-approve
           fi
 
       # Always remove the runner IP from the endpoint, even if Terraform failed.
