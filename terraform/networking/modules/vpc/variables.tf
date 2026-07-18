@@ -19,6 +19,12 @@ variable "create_nat_gateways" {
   default     = false
 }
 
+variable "single_nat_gateway" {
+  description = "Collapse the NAT tier to one gateway in the first AZ instead of one per AZ. Cheaper (saves the other AZs' hourly cost) but egress is no longer AZ-independent. For dev/reference; prod keeps per-AZ HA. See ADR-0008."
+  type        = bool
+  default     = false
+}
+
 variable "gateway_endpoint_services" {
   description = "Gateway VPC endpoints to create (free)"
   type        = list(string)

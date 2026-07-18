@@ -44,3 +44,9 @@ variable "enable_interface_endpoints" {
   type        = bool
   default     = false
 }
+
+variable "egress_single_nat" {
+  description = "Use a single NAT gateway in the egress VPC instead of one per AZ. Cheaper for dev/reference (saves ~2x NAT hourly cost); leave false for production HA. See ADR-0008."
+  type        = bool
+  default     = false
+}
