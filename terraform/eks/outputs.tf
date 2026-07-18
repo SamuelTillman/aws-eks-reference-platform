@@ -31,3 +31,20 @@ output "kubeconfig_command" {
   description = "Command to write kubeconfig for this cluster"
   value       = "aws eks update-kubeconfig --name ${aws_eks_cluster.this.name} --region ${var.aws_region}"
 }
+
+# --- Karpenter (ADR-0011): values the GitOps Helm release / EC2NodeClass use ---
+
+output "karpenter_node_instance_profile" {
+  description = "Instance profile name for the EC2NodeClass (spec.instanceProfile)"
+  value       = aws_iam_instance_profile.karpenter_node.name
+}
+
+output "karpenter_interruption_queue" {
+  description = "SQS interruption queue name for the Karpenter Helm values (settings.interruptionQueue)"
+  value       = aws_sqs_queue.karpenter_interruption.name
+}
+
+output "karpenter_controller_role_arn" {
+  description = "Karpenter controller IAM role (assumed via Pod Identity)"
+  value       = aws_iam_role.karpenter_controller.arn
+}

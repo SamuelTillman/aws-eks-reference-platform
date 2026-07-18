@@ -1,0 +1,18 @@
+# Registers the public Karpenter OCI Helm registry with ArgoCD so the karpenter
+# Application (below) can pull the chart. The registry is public, so this holds
+# NO credentials, just the enableOCI flag ArgoCD needs to treat the URL as OCI.
+# sync-wave -1: created before the karpenter Application that depends on it.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: karpenter-oci-repo
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+stringData:
+  name: karpenter
+  type: helm
+  url: public.ecr.aws/karpenter
+  enableOCI: "true"

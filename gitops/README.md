@@ -19,13 +19,32 @@ change the cluster by merging a commit, not by running `kubectl apply` by hand.
 ```
 gitops/
   README.md        this file
-  apps/            one ArgoCD Application per platform component (empty until
-                   the first component increment: Karpenter, then Cilium,
-                   observability, Kyverno, Backstage)
+  apps/            one ArgoCD Application per platform component (the root app
+                   watches this dir with recurse:true)
+    karpenter-oci-repo.yaml   registers the public Karpenter OCI Helm registry
+    karpenter.yaml            Karpenter controller Helm chart (sync-wave 0)
+    karpenter-nodepool.yaml   Application sourcing the NodePool/EC2NodeClass below
+  karpenter/       raw custom resources applied by karpenter-nodepool.yaml. Kept
+                   OUT of apps/ so the root app does not try to apply these CRs
+                   before their CRDs exist.
+    ec2nodeclass.yaml
+    nodepool.yaml
 ```
+
+Next components (Cilium, observability, Kyverno, Backstage) follow the same shape.
 
 ## Adding a component
 
 Drop an `Application` manifest in `apps/`, for example `apps/karpenter.yaml`,
 pointing at that component's chart or manifests. Merge to `main` and ArgoCD picks
 it up. Keep each app small and independently syncable.
+
+**Ordering:** if a component installs CRDs that other manifests use, split it, put
+the chart in `apps/` at `argocd.argoproj.io/sync-wave: "0"` and the custom
+resources in a sibling dir referenced by a second Application at sync-wave `"1"`,
+so the CRDs exist first (see Karpenter above).
+
+**CRs vs Applications:** raw Kubernetes manifests that are not `Application`s must
+live OUTSIDE `apps/` (the root app recurses `apps/` and would apply them directly).
+Put them in their own top-level dir (e.g. `karpenter/`) and point an Application at
+it.

@@ -35,6 +35,13 @@ non-sensitive settings inline, sensitive ones from secrets
 
 Run these from the button, in order:
 
+0. **If Karpenter has provisioned any nodes** ([ADR-0011](adr/0011-karpenter-autoscaling.md)):
+   delete the NodePool first so Karpenter drains and terminates its own nodes
+   before the cluster goes away, those EC2 instances are **not** Terraform-managed,
+   so a straight `eks` destroy would orphan them. With kubeconfig set (see below):
+   `kubectl delete nodepool --all && kubectl wait --for=delete nodes -l platform.refplatform/tier=karpenter --timeout=5m`.
+   If the cluster is already gone, clean up any leftovers by terminating instances
+   tagged `karpenter.sh/nodepool` in `workloads-dev`.
 1. `stack=argocd`, `action=destroy`, `confirm=argocd`  (removes ArgoCD)
 2. `stack=eks`, `action=destroy`, `confirm=eks`  (~10 min; deletes the cluster)
 3. `stack=networking`, `action=destroy`, `confirm=networking`  (~5 min; a guard
