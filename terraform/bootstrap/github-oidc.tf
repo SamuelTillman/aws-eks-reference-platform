@@ -52,10 +52,20 @@ data "aws_iam_policy_document" "github_trust" {
   }
 }
 
+# Permission boundary (ADR-0012): caps this role even though it holds
+# AdministratorAccess. It cannot mint IAM users/keys, disable the audit backbone,
+# leave the org, weaken the boundary, or create an unbounded role.
+module "boundary" {
+  source = "../modules/permission-boundary"
+  name   = "${var.name_prefix}-permission-boundary"
+  tags   = local.tags
+}
+
 resource "aws_iam_role" "github_actions" {
   name                 = "${var.name_prefix}-github-actions"
   assume_role_policy   = data.aws_iam_policy_document.github_trust.json
   max_session_duration = 3600
+  permissions_boundary = module.boundary.arn
 
   tags = local.tags
 }
