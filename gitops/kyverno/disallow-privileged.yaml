@@ -1,0 +1,39 @@
+# Audit (ADR-0014): flag privileged containers. Audit, not Enforce, because some
+# platform agents (node-exporter, CNI) legitimately need elevation; those live in
+# excluded namespaces anyway. Promote to Enforce once workloads are known.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-privileged-containers
+  annotations:
+    policies.kyverno.io/title: Disallow Privileged Containers
+    policies.kyverno.io/category: Pod Security Standards (Baseline)
+    policies.kyverno.io/description: >-
+      Privileged containers share the host kernel namespaces and devices; they
+      should not run outside tightly scoped, system namespaces.
+spec:
+  background: true
+  rules:
+    - name: privileged-containers
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      exclude:
+        any:
+          - resources:
+              namespaces: [kube-system, kyverno, karpenter, monitoring, argocd]
+      validate:
+        failureAction: Audit
+        message: "Privileged mode is disallowed. securityContext.privileged must be false."
+        pattern:
+          spec:
+            =(ephemeralContainers):
+              - =(securityContext):
+                  =(privileged): "false"
+            =(initContainers):
+              - =(securityContext):
+                  =(privileged): "false"
+            containers:
+              - =(securityContext):
+                  =(privileged): "false"

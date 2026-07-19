@@ -1,0 +1,49 @@
+# The one ENFORCING starter policy (ADR-0014): reject pods whose images are
+# untagged or use the mutable ':latest' tag, in non-system namespaces. Low-risk
+# (nothing legitimate here uses :latest outside system namespaces) and it makes
+# the admission gate demonstrable.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+  annotations:
+    policies.kyverno.io/title: Disallow Latest Tag
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/description: >-
+      Images must carry an explicit, immutable tag. ':latest' and untagged images
+      make deployments non-reproducible and hard to roll back.
+spec:
+  background: true
+  rules:
+    - name: require-image-tag
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      exclude:
+        any:
+          - resources:
+              namespaces: [kube-system, kyverno, karpenter, monitoring, argocd]
+      validate:
+        failureAction: Enforce
+        message: "An explicit image tag is required (untagged images are not allowed)."
+        pattern:
+          spec:
+            containers:
+              - image: "*:*"
+    - name: validate-image-tag
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      exclude:
+        any:
+          - resources:
+              namespaces: [kube-system, kyverno, karpenter, monitoring, argocd]
+      validate:
+        failureAction: Enforce
+        message: "Using the mutable ':latest' tag is not allowed."
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest"

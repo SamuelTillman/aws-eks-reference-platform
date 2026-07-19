@@ -1,0 +1,66 @@
+# Cluster observability (ADR-0013): kube-prometheus-stack, sized cheap + ephemeral.
+# Prometheus + Grafana + exporters. ServerSideApply is required, the chart's CRDs
+# exceed the client-side last-applied-annotation limit. sync-wave 2: after
+# Karpenter, so its footprint can trigger (and demonstrate) a spot scale-up.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: "87.17.0"
+    helm:
+      releaseName: kube-prometheus-stack
+      valuesObject:
+        # No paging destination on a demo platform.
+        alertmanager:
+          enabled: false
+        prometheus:
+          prometheusSpec:
+            retention: 12h
+            # Ephemeral: metrics are transient on a rebuildable cluster (no PVC).
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 1Gi
+        grafana:
+          enabled: true
+          # Chart default admin password; fine for a private, port-forward-only
+          # endpoint. Ingress + SSO is a later increment (ADR-0010 §4).
+          defaultDashboardsEnabled: true
+          persistence:
+            enabled: false
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
+        prometheusOperator:
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
+        # node-exporter + kube-state-metrics stay on (the actual signal).
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

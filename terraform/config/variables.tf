@@ -15,6 +15,12 @@ variable "state_bucket" {
   type        = string
 }
 
+variable "enable_conformance_pack" {
+  description = "Deploy the org-wide baseline conformance pack of managed Config rules (ADR-0009). Bills per rule evaluation; set false to stand it down to zero."
+  type        = bool
+  default     = true
+}
+
 variable "force_destroy_config_bucket" {
   description = "Allow the Config bucket to be destroyed with objects present. Default false: audit/compliance data should not be casually deletable (ADR-0009). Set true only for a deliberate full teardown."
   type        = bool

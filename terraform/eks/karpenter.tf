@@ -28,6 +28,11 @@ locals {
   workloads_dev_account_id = data.terraform_remote_state.org.outputs.account_ids["workloads_dev"]
   karpenter_queue_name     = "${local.cluster_name}-karpenter"
 
+  # Permission boundary (ADR-0012 phase 3): every EKS service role Terraform
+  # creates carries it, so the escalation guard is total. The policy is seeded in
+  # workloads-dev by the cicd stack.
+  permission_boundary_arn = "arn:${data.aws_partition.current.partition}:iam::${local.workloads_dev_account_id}:policy/${var.name_prefix}-permission-boundary"
+
   # EventBridge rules that feed the interruption queue. Karpenter reads these to
   # cordon+drain a node before AWS reclaims it, instead of a hard spot kill.
   karpenter_events = {
@@ -57,9 +62,10 @@ locals {
 # =============================================================================
 
 resource "aws_iam_role" "karpenter_node" {
-  provider           = aws.workloads_dev
-  name               = "${local.cluster_name}-karpenter-node"
-  assume_role_policy = data.aws_iam_policy_document.node_assume.json # ec2.amazonaws.com, from nodes.tf
+  provider             = aws.workloads_dev
+  name                 = "${local.cluster_name}-karpenter-node"
+  assume_role_policy   = data.aws_iam_policy_document.node_assume.json # ec2.amazonaws.com, from nodes.tf
+  permissions_boundary = local.permission_boundary_arn
 }
 
 resource "aws_iam_role_policy_attachment" "karpenter_node" {
@@ -106,9 +112,10 @@ data "aws_iam_policy_document" "karpenter_controller_assume" {
 }
 
 resource "aws_iam_role" "karpenter_controller" {
-  provider           = aws.workloads_dev
-  name               = "${local.cluster_name}-karpenter-controller"
-  assume_role_policy = data.aws_iam_policy_document.karpenter_controller_assume.json
+  provider             = aws.workloads_dev
+  name                 = "${local.cluster_name}-karpenter-controller"
+  assume_role_policy   = data.aws_iam_policy_document.karpenter_controller_assume.json
+  permissions_boundary = local.permission_boundary_arn
 }
 
 resource "aws_eks_pod_identity_association" "karpenter" {

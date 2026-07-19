@@ -1,0 +1,36 @@
+# Audit (ADR-0014): workloads should declare CPU/memory requests and limits. This
+# is also what lets Karpenter (ADR-0011) bin-pack and right-size nodes well.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-requests-limits
+  annotations:
+    policies.kyverno.io/title: Require Requests and Limits
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/description: >-
+      Containers should set resource requests and limits so the scheduler and
+      Karpenter can place and size them, and so one workload cannot starve others.
+spec:
+  background: true
+  rules:
+    - name: validate-resources
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      exclude:
+        any:
+          - resources:
+              namespaces: [kube-system, kyverno, karpenter, monitoring, argocd]
+      validate:
+        failureAction: Audit
+        message: "CPU and memory requests and limits are required on every container."
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  requests:
+                    memory: "?*"
+                    cpu: "?*"
+                  limits:
+                    memory: "?*"

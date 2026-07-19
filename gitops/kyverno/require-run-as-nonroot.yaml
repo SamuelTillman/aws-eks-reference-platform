@@ -1,0 +1,36 @@
+# Audit (ADR-0014): containers should be forced to run as a non-root user, set at
+# the pod or container securityContext. Audit first so it cannot break workloads
+# that have not set it yet; promote to Enforce with the rest.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-run-as-nonroot
+  annotations:
+    policies.kyverno.io/title: Require Run As Non-Root
+    policies.kyverno.io/category: Pod Security Standards (Restricted)
+    policies.kyverno.io/description: >-
+      Containers should run as a non-root user so a container breakout does not
+      start with root on the node.
+spec:
+  background: true
+  rules:
+    - name: run-as-non-root
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      exclude:
+        any:
+          - resources:
+              namespaces: [kube-system, kyverno, karpenter, monitoring, argocd]
+      validate:
+        failureAction: Audit
+        message: "Containers must run as non-root (set runAsNonRoot: true at pod or container level)."
+        anyPattern:
+          - spec:
+              securityContext:
+                runAsNonRoot: "true"
+          - spec:
+              containers:
+                - securityContext:
+                    runAsNonRoot: "true"
