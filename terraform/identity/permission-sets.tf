@@ -10,6 +10,13 @@ locals {
       policy_arn  = "arn:aws:iam::aws:policy/AdministratorAccess"
       session     = "PT8H"
     }
+    # The console/bootstrap-default admin set, imported so it is under IaC and can
+    # be bounded (ADR-0012). Kept at its live PT1H session.
+    AdministratorAccess = {
+      description = "Full administrative access (console-default set, managed under ADR-0012)"
+      policy_arn  = "arn:aws:iam::aws:policy/AdministratorAccess"
+      session     = "PT1H"
+    }
     PowerUser = {
       description = "Full access except IAM and Organizations management"
       policy_arn  = "arn:aws:iam::aws:policy/PowerUserAccess"
@@ -43,4 +50,24 @@ resource "aws_ssoadmin_managed_policy_attachment" "this" {
   instance_arn       = local.sso_instance_arn
   permission_set_arn = aws_ssoadmin_permission_set.this[each.key].arn
   managed_policy_arn = each.value.policy_arn
+}
+
+# Permission boundaries on the privileged human permission sets (ADR-0012 phase 2).
+# A customer-managed boundary, resolved per assigned account, so the policy must
+# exist in every account these sets reach (seeded by bootstrap/cicd/security).
+# Even a full-admin human session then cannot mint IAM users/keys, disable the
+# audit backbone, leave the org, weaken the boundary, or create an unbounded role.
+# OrganizationAccountAccessRole and management root remain the unbounded
+# break-glass paths (ADR-0012). ReadOnly/Billing are already minimal, not bounded.
+resource "aws_ssoadmin_permissions_boundary_attachment" "bounded" {
+  for_each = toset(["Administrator", "AdministratorAccess", "PowerUser"])
+
+  instance_arn       = local.sso_instance_arn
+  permission_set_arn = aws_ssoadmin_permission_set.this[each.key].arn
+
+  permissions_boundary {
+    customer_managed_policy_reference {
+      name = "${var.name_prefix}-permission-boundary"
+    }
+  }
 }
