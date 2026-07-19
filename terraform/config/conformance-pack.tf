@@ -10,12 +10,29 @@
 # included (an AWS limitation) and would need a standalone pack.
 # -----------------------------------------------------------------------------
 
+# The org conformance pack targets the MEMBER accounts (see excluded_accounts
+# below). The config-conforms SLR is created in the management account anyway:
+# it is the documented prerequisite for ANY conformance-pack activity there (a
+# delegated admin cannot create it), so keeping it means a standalone management
+# conformance pack can be added later without re-hitting the SLR gap. See
+# layer1-issues #10.
+resource "aws_iam_service_linked_role" "config_conforms" {
+  count            = var.enable_conformance_pack ? 1 : 0
+  aws_service_name = "config-conforms.amazonaws.com"
+}
+
 resource "aws_config_organization_conformance_pack" "baseline" {
   count    = var.enable_conformance_pack ? 1 : 0
   provider = aws.security
 
   name          = "${var.name_prefix}-baseline"
   template_body = file("${path.module}/conformance-pack.yaml")
+
+  # Exclude the management account. Org conformance packs do not converge in the
+  # management account (the deployment hangs in CREATE_IN_PROGRESS with no backing
+  # stack, even with the SLR present); member accounts are the supported targets,
+  # and mgmt holds no workloads to attest. layer1-issues #10.
+  excluded_accounts = [local.mgmt_account_id]
 
   # Org conformance packs roll out to every member account sequentially and
   # routinely exceed the provider's default 10m create wait (layer1-issues).
@@ -26,6 +43,7 @@ resource "aws_config_organization_conformance_pack" "baseline" {
   }
 
   depends_on = [
+    aws_iam_service_linked_role.config_conforms,
     aws_config_configuration_aggregator.org,
     module.config_management,
     module.config_security,

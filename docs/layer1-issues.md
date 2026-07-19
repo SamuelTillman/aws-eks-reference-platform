@@ -169,6 +169,39 @@ Services enabled for this platform: `sso`, `cloudtrail`, `guardduty`,
   `--region us-east-1`: a region-less call hits us-west-1 and the region-allowlist
   SCP denies it (a red herring that looks like a permissions problem).
 
+## 10. Org conformance pack fails ONLY in the management account (SLR)
+
+- **Stack:** `terraform/config`
+- **Symptom:** the org conformance pack finished `CREATE_SUCCESSFUL` in all four
+  member accounts but the overall status was `CREATE_FAILED`; the per-account
+  detail showed the **management account** failing with
+  `UnableToAssumeServiceLinkedRoleException: AWS Config can't assume the
+  service-linked role because this is an organization management account and you
+  have used a delegated administrator ... You must create the SLR separately`.
+- **Root cause:** when an org conformance pack is deployed by a **delegated
+  admin** (here the security account), AWS auto-creates the
+  `AWSServiceRoleForConfigConforms` SLR in each **member** account but **not** in
+  the management account. Creating the SLR in mgmt clears the *first* error, but
+  the management account then **hangs in `CREATE_IN_PROGRESS` forever with no
+  backing CloudFormation stack**: an org conformance pack deployed by a delegated
+  admin simply does not converge in the management account. Worse, while it is
+  stuck the whole pack is non-terminal, so it can be neither deleted
+  (`ResourceInUseException`) nor replaced.
+- **Fix:** **exclude the management account** from the org pack
+  (`excluded_accounts = [local.mgmt_account_id]`) and apply it as an **in-place
+  update** (untaint first if a prior timeout tainted it, delete/replace is blocked
+  while a member hangs; `PutOrganizationConformancePack` update is accepted). The
+  pack then converges `UPDATE_SUCCESSFUL` across the four member accounts (which
+  hold all real resources; mgmt has none to attest). The mgmt SLR is kept: it is
+  harmless and is the prerequisite if a **standalone** management conformance pack
+  is ever added.
+- **Prevention:** deploy org conformance packs to **member accounts only**;
+  exclude the management account from the start. Read the **per-account** detail
+  (`get-organization-conformance-pack-detailed-status`), not just the rolled-up
+  status, an overall `CREATE_FAILED`/hang can be a single account. If a pack is
+  stuck non-terminal, an in-place `excluded_accounts` update unsticks it where a
+  delete cannot.
+
 ## Operational notes
 
 - **SSO session expiry vs. background jobs.** A background retry loop for the
