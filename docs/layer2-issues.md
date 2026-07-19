@@ -111,6 +111,26 @@ have to rediscover any of these. See also
   request is the tell that the listener is plaintext, retry with `http://` before
   suspecting the tunnel, creds, or the endpoint allowlist.
 
+## 7. kube-prometheus-stack / Kyverno show OutOfSync-but-Healthy in ArgoCD
+
+- **Where:** the `kube-prometheus-stack` and `kyverno` ArgoCD Applications
+  ([ADR-0013](adr/0013-observability.md), [ADR-0014](adr/0014-policy-kyverno.md)).
+- **Symptom:** both settle at **Health = Healthy** (all pods Running, functional,
+  Kyverno enforcement verified working) but **Sync = OutOfSync**, and with
+  `selfHeal: true` ArgoCD keeps re-applying them.
+- **Root cause:** cosmetic, not a real failure. These charts trip the well-known
+  ArgoCD server-side-apply drift: admission/conversion webhooks and the operators
+  mutate objects after apply (CRD `caBundle` injection, defaulted fields,
+  `managedFields` ownership), so ArgoCD's live-vs-desired diff never reaches
+  clean. `ServerSideApply=true` (already set) reduces but does not eliminate it.
+- **Fix (optional, cosmetic):** add `spec.ignoreDifferences` to each Application
+  for the noisy fields (webhook `caBundle`, conversion strategy, the
+  operator-managed fields), or accept OutOfSync-but-Healthy as normal for these
+  charts. Left as OutOfSync here since it is harmless and the components work.
+- **Prevention:** judge these Applications by **Health**, not Sync. OutOfSync +
+  Healthy on a webhook-heavy Helm chart is expected; only OutOfSync + Degraded/
+  Missing is a real problem.
+
 ## 6. Karpenter controller: iam:ListInstanceProfiles AccessDenied (fixed)
 
 - **Where:** `terraform/eks/karpenter.tf`, the Karpenter controller IAM policy
