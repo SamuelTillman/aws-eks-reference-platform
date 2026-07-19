@@ -48,6 +48,47 @@ flowchart TB
     class users,inet ext;
 ```
 
+### Cluster platform (Layer 2), GitOps-delivered
+
+Terraform bootstraps the cluster and ArgoCD; every platform component after that
+lands as a Git-managed ArgoCD `Application` (ADR-0010).
+
+```mermaid
+flowchart TB
+    git["Git (this repo)<br/>gitops/"]
+
+    subgraph cluster["refplatform-dev EKS cluster"]
+        direction TB
+        argo["ArgoCD<br/>app-of-apps"]
+        karp["Karpenter<br/>spot autoscaling + consolidation"]
+        obs["kube-prometheus-stack<br/>Prometheus + Grafana"]
+        kyv["Kyverno<br/>admission policy"]
+        sys["system node group<br/>(2 spot)"]
+        karpnodes["Karpenter spot nodes<br/>(on demand)"]
+    end
+
+    git -->|"reconcile"| argo
+    argo --> karp
+    argo --> obs
+    argo --> kyv
+    karp -->|"provisions"| karpnodes
+    kyv -.->|"gates admission"| karpnodes
+    obs -.->|"scrapes"| sys
+
+    classDef gitops fill:#132a24,stroke:#46b58a,color:#e7ebf2;
+    classDef comp fill:#0f2a33,stroke:#37b3bf,color:#e7ebf2;
+    classDef node fill:#1a2130,stroke:#4b87c4,color:#e7ebf2;
+    class git,argo gitops;
+    class karp,obs,kyv comp;
+    class sys,karpnodes,cluster node;
+```
+
+**Defense in depth** wraps all of it: org **SCPs** (region allowlist, deny-root,
+deny-disable-audit), **permission boundaries** on every privileged principal
+(CI OIDC roles, human SSO sets, service roles, ADR-0012), a **Config conformance
+pack** continuously attesting the controls (ADR-0009), and **Kyverno** at the
+Kubernetes admission gate (ADR-0014). Nothing stores a long-lived credential.
+
 For the full visual reference (a layered map plus deep-dive flows: the zero-secret
 credential path, the write-isolated audit trail, centralized-egress networking, and
 the EKS cluster internals), see the **[architecture page](https://samueltillman.github.io/aws-eks-reference-platform/)**

@@ -1,0 +1,100 @@
+################################################################################
+# refplatform baseline conformance pack (ADR-0009).
+#
+# Managed AWS Config rules that continuously attest the platform's OWN controls,
+# so drift from the hardening posture shows up as non-compliant findings in the
+# security account's aggregator, not just at deploy time. Deliberately curated
+# (not a full CIS pack) to keep rule-evaluation cost modest; extend as needed.
+################################################################################
+Resources:
+  # --- S3: no public access, encrypted, TLS-only (ADR-0009) --------------------
+  S3BucketPublicReadProhibited:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: s3-bucket-public-read-prohibited
+      Source:
+        Owner: AWS
+        SourceIdentifier: S3_BUCKET_PUBLIC_READ_PROHIBITED
+  S3BucketPublicWriteProhibited:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: s3-bucket-public-write-prohibited
+      Source:
+        Owner: AWS
+        SourceIdentifier: S3_BUCKET_PUBLIC_WRITE_PROHIBITED
+  S3BucketServerSideEncryptionEnabled:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: s3-bucket-server-side-encryption-enabled
+      Source:
+        Owner: AWS
+        SourceIdentifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
+  S3BucketSslRequestsOnly:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: s3-bucket-ssl-requests-only
+      Source:
+        Owner: AWS
+        SourceIdentifier: S3_BUCKET_SSL_REQUESTS_ONLY
+
+  # --- Compute: encrypted volumes + IMDSv2 (ADR-0009) --------------------------
+  EncryptedVolumes:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: encrypted-volumes
+      Source:
+        Owner: AWS
+        SourceIdentifier: ENCRYPTED_VOLUMES
+  Ec2Imdsv2Check:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: ec2-imdsv2-check
+      Source:
+        Owner: AWS
+        SourceIdentifier: EC2_IMDSV2_CHECK
+
+  # --- Identity: no root keys, no long-lived user creds (zero-creds rule) -------
+  IamRootAccessKeyCheck:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: iam-root-access-key-check
+      Source:
+        Owner: AWS
+        SourceIdentifier: IAM_ROOT_ACCESS_KEY_CHECK
+  IamUserNoPoliciesCheck:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: iam-user-no-policies-check
+      Source:
+        Owner: AWS
+        SourceIdentifier: IAM_USER_NO_POLICIES_CHECK
+
+  # --- Audit + network backbone (ADR-0004/0006/0009) ---------------------------
+  MultiRegionCloudTrailEnabled:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: multi-region-cloudtrail-enabled
+      Source:
+        Owner: AWS
+        SourceIdentifier: MULTI_REGION_CLOUD_TRAIL_ENABLED
+  GuardDutyEnabledCentralized:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: guardduty-enabled-centralized
+      Source:
+        Owner: AWS
+        SourceIdentifier: GUARDDUTY_ENABLED_CENTRALIZED
+  VpcFlowLogsEnabled:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: vpc-flow-logs-enabled
+      Source:
+        Owner: AWS
+        SourceIdentifier: VPC_FLOW_LOGS_ENABLED
+  IncomingSshDisabled:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: restricted-ssh
+      Source:
+        Owner: AWS
+        SourceIdentifier: INCOMING_SSH_DISABLED

@@ -24,14 +24,24 @@ gitops/
     karpenter-oci-repo.yaml   registers the public Karpenter OCI Helm registry
     karpenter.yaml            Karpenter controller Helm chart (sync-wave 0)
     karpenter-nodepool.yaml   Application sourcing the NodePool/EC2NodeClass below
+    observability.yaml        kube-prometheus-stack: Prometheus + Grafana (wave 2)
+    kyverno.yaml              Kyverno admission policy engine (wave 2)
+    kyverno-policies.yaml     Application sourcing the ClusterPolicies below (wave 3)
   karpenter/       raw custom resources applied by karpenter-nodepool.yaml. Kept
                    OUT of apps/ so the root app does not try to apply these CRs
                    before their CRDs exist.
     ec2nodeclass.yaml
     nodepool.yaml
+  kyverno/         Kyverno ClusterPolicy CRs applied by kyverno-policies.yaml
+                   (also kept out of apps/ for the same CRD-ordering reason).
+    disallow-latest-tag.yaml      (Enforce)
+    require-requests-limits.yaml  (Audit)
+    disallow-privileged.yaml      (Audit)
+    require-run-as-nonroot.yaml   (Audit)
 ```
 
-Next components (Cilium, observability, Kyverno, Backstage) follow the same shape.
+Components map to ADRs: Karpenter [ADR-0011], observability [ADR-0013], Kyverno
+[ADR-0014]. Next up (Cilium, Backstage) follow the same shape.
 
 ## Adding a component
 

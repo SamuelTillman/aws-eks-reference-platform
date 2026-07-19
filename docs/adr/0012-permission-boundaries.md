@@ -7,9 +7,12 @@
 > `AdministratorAccess`, `PowerUser` all bounded; policy simulation confirms
 > credential-minting / audit-tampering deny while normal work is allowed). The
 > stray console-default `AdministratorAccess` set was imported under Terraform in
-> the process. Remaining: `permissions_boundary` on the Terraform service roles
-> (EKS / Karpenter / Config). This closes the permission-boundary item deferred
-> from [ADR-0009](0009-audit-hardening.md).
+> the process. Phase 3 also done: `permissions_boundary` is now set on the
+> Terraform service roles (Config recorder roles applied live; EKS cluster / node
+> / Karpenter roles in code, applied on the next cluster build), so every role the
+> platform creates carries the boundary and the escalation guard is total. This
+> closes the permission-boundary item deferred from
+> [ADR-0009](0009-audit-hardening.md).
 
 ## Context
 

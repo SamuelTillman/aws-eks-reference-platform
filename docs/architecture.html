@@ -220,8 +220,8 @@
         </div>
         <div class="layer" style="--lh: var(--l2)">
           <div class="spine"><div class="node">2</div></div>
-          <div class="card"><div class="card-top"><div><div class="card-eyebrow">EKS platform &middot; workloads-dev</div><h3>Kubernetes cluster</h3><p class="purpose">The refplatform-dev cluster is live on EKS 1.35: API access entries, Pod Identity, KMS-encrypted secrets, IMDSv2 + encrypted-EBS spot nodes. Platform tooling lands via GitOps next.</p></div><span class="pill wip">Foundation live</span></div>
-            <div class="chips"><span class="chip key">EKS 1.35</span><span class="chip key">Spot nodes</span><span class="chip key">Access entries</span><span class="chip key">Pod Identity</span><span class="chip ghost">Karpenter</span><span class="chip ghost">Cilium</span><span class="chip ghost">ArgoCD</span><span class="chip ghost">Prometheus/OTel</span><span class="chip ghost">Kyverno</span><span class="chip ghost">Backstage</span></div></div>
+          <div class="card"><div class="card-top"><div><div class="card-eyebrow">EKS platform &middot; workloads-dev</div><h3>Kubernetes cluster</h3><p class="purpose">EKS 1.35 with API access entries, Pod Identity, KMS-encrypted secrets, IMDSv2 + encrypted-EBS spot nodes. ArgoCD delivers the platform by GitOps: Karpenter autoscaling, Prometheus/Grafana, and Kyverno policy all ship as Applications. Rebuildable from code to near-zero idle cost.</p></div><span class="pill wip">Foundation + GitOps live</span></div>
+            <div class="chips"><span class="chip key">EKS 1.35</span><span class="chip key">Spot nodes</span><span class="chip key">Access entries</span><span class="chip key">Pod Identity</span><span class="chip key">ArgoCD</span><span class="chip key">Karpenter</span><span class="chip key">Prometheus/Grafana</span><span class="chip key">Kyverno</span><span class="chip ghost">Cilium</span><span class="chip ghost">Backstage</span></div></div>
         </div>
         <div class="layer" style="--lh: var(--l1)">
           <div class="spine"><div class="node">1</div></div>
@@ -360,7 +360,8 @@
         <div class="notes">
           <div class="note"><b>Private-first endpoint</b><p>Private access is always on; public is restricted to an admin CIDR and forbidden from being 0.0.0.0/0. Prod goes fully private.</p></div>
           <div class="note"><b>Cheap by default</b><p>Spot capacity across several instance types, one-click teardown, and standard-support version to avoid the 6x extended-support rate.</p></div>
-          <div class="note"><b>GitOps-ready</b><p>The cluster is the foundation; Karpenter, Cilium, observability, policy, and Backstage land as ArgoCD increments on top.</p></div>
+          <div class="note"><b>GitOps-delivered</b><p>ArgoCD app-of-apps drives the platform from Git: Karpenter (spot autoscaling), kube-prometheus-stack (metrics + Grafana), and Kyverno (admission policy) are live increments; Cilium and Backstage are next.</p></div>
+          <div class="note"><b>Defense in depth</b><p>Org SCPs, permission boundaries on every privileged principal, a Config conformance pack attesting the controls, and Kyverno at the admission gate, layered from the org root down to the pod.</p></div>
         </div>
       </div>
     </section>

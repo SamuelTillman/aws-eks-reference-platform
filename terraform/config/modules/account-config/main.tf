@@ -4,9 +4,17 @@
 # -----------------------------------------------------------------------------
 
 data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
+
+locals {
+  # Permission boundary (ADR-0012 phase 3), resolved in this account. Empty name
+  # keeps it optional for forks that have not created the boundary yet.
+  permission_boundary_arn = var.permission_boundary_name != "" ? "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:policy/${var.permission_boundary_name}" : null
+}
 
 resource "aws_iam_role" "config" {
-  name = "${var.name_prefix}-config-recorder"
+  name                 = "${var.name_prefix}-config-recorder"
+  permissions_boundary = local.permission_boundary_arn
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"

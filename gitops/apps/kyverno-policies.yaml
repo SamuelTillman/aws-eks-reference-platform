@@ -1,0 +1,31 @@
+# Kyverno starter policies (ADR-0014). Kept in gitops/kyverno/ (not apps/) so the
+# root app does not apply the ClusterPolicy CRs before Kyverno's CRDs exist.
+# sync-wave 3: after the Kyverno engine (wave 2) is Healthy.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kyverno-policies
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/SamuelTillman/aws-eks-reference-platform.git
+    path: gitops/kyverno
+    targetRevision: main
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kyverno
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 10
+      backoff:
+        duration: 15s
+        maxDuration: 3m
+        factor: 2

@@ -17,9 +17,10 @@ data "aws_iam_policy_document" "node_assume" {
 }
 
 resource "aws_iam_role" "node" {
-  provider           = aws.workloads_dev
-  name               = "${local.cluster_name}-node"
-  assume_role_policy = data.aws_iam_policy_document.node_assume.json
+  provider             = aws.workloads_dev
+  name                 = "${local.cluster_name}-node"
+  assume_role_policy   = data.aws_iam_policy_document.node_assume.json
+  permissions_boundary = local.permission_boundary_arn
 }
 
 resource "aws_iam_role_policy_attachment" "node" {

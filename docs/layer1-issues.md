@@ -147,6 +147,28 @@ Services enabled for this platform: `sso`, `cloudtrail`, `guardduty`,
 - **Fix:** re-run the apply. The NATs are already gone, so the second pass
   releases the orphaned EIPs cleanly.
 
+## 9. Org conformance pack create exceeds Terraform's default 10m timeout
+
+- **Stack:** `terraform/config`
+- **Symptom:** `aws_config_organization_conformance_pack` apply failed with
+  `timeout while waiting for state to become 'CREATE_SUCCESSFUL' (last state:
+  'CREATE_IN_PROGRESS', timeout: 10m0s)`. The pack was in fact created and still
+  deploying (it rolls rules out to every member account sequentially); Terraform
+  just gave up waiting and left the resource **tainted**, which would force a
+  wasteful destroy+recreate on the next apply.
+- **Root cause:** org conformance packs routinely take 15-20 min to reach
+  `CREATE_SUCCESSFUL`; the AWS provider's default create timeout is 10 min.
+- **Fix:** add a `timeouts { create/update/delete = "30m" }` block to the
+  resource. For the already-running pack, `terraform untaint
+  aws_config_organization_conformance_pack.baseline[0]` so the in-progress pack is
+  kept (a re-plan then shows no changes); it finishes on its own.
+- **Prevention:** any org-wide Config/conformance resource gets a generous
+  `timeouts` block up front. Check real status with
+  `aws configservice describe-organization-conformance-pack-statuses --region
+  us-east-1` from the delegated-admin (security) account, and remember to pass
+  `--region us-east-1`: a region-less call hits us-west-1 and the region-allowlist
+  SCP denies it (a red herring that looks like a permissions problem).
+
 ## Operational notes
 
 - **SSO session expiry vs. background jobs.** A background retry loop for the
