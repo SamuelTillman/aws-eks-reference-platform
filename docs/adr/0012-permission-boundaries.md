@@ -2,10 +2,14 @@
 
 **Status:** Accepted · **Date:** 2026-07
 
-> **Implementation status:** Phase 1 implemented (the GitHub OIDC roles). Phase 2
-> (human SSO permission sets + Terraform service roles) is scoped below and
-> follows next. This closes the permission-boundary item deferred from
-> [ADR-0009](0009-audit-hardening.md).
+> **Implementation status:** Phase 1 (GitHub OIDC roles) and the human SSO
+> permission sets are implemented and verified live (`Administrator`,
+> `AdministratorAccess`, `PowerUser` all bounded; policy simulation confirms
+> credential-minting / audit-tampering deny while normal work is allowed). The
+> stray console-default `AdministratorAccess` set was imported under Terraform in
+> the process. Remaining: `permissions_boundary` on the Terraform service roles
+> (EKS / Karpenter / Config). This closes the permission-boundary item deferred
+> from [ADR-0009](0009-audit-hardening.md).
 
 ## Context
 
