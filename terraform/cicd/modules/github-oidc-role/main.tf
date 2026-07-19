@@ -40,6 +40,9 @@ resource "aws_iam_role" "deploy" {
   name                 = var.role_name
   assume_role_policy   = data.aws_iam_policy_document.trust.json
   max_session_duration = 3600
+  # Permission boundary (ADR-0012): caps the deploy role. null keeps it optional
+  # for forks that have not created the boundary yet.
+  permissions_boundary = var.permissions_boundary_arn
 }
 
 resource "aws_iam_role_policy_attachment" "deploy" {

@@ -12,3 +12,9 @@ variable "policy_arn" {
   description = "Managed policy attached to the deploy role"
   type        = string
 }
+
+variable "permissions_boundary_arn" {
+  description = "Permission boundary to cap the deploy role (ADR-0012). null = unbounded."
+  type        = string
+  default     = null
+}
