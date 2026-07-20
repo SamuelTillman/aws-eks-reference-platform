@@ -24,6 +24,8 @@ gitops/
     karpenter-oci-repo.yaml   registers the public Karpenter OCI Helm registry
     karpenter.yaml            Karpenter controller Helm chart (sync-wave 0)
     karpenter-nodepool.yaml   Application sourcing the NodePool/EC2NodeClass below
+    external-secrets.yaml     External Secrets Operator (wave 0, installs CRDs)
+    external-secrets-config.yaml  ClusterSecretStore + ExternalSecrets (wave 1)
     observability.yaml        kube-prometheus-stack: Prometheus + Grafana (wave 2)
     kyverno.yaml              Kyverno admission policy engine (wave 2)
     kyverno-policies.yaml     Application sourcing the ClusterPolicies below (wave 3)
@@ -32,6 +34,11 @@ gitops/
                    before their CRDs exist.
     ec2nodeclass.yaml
     nodepool.yaml
+  external-secrets/  ClusterSecretStore + ExternalSecret CRs applied by
+                   external-secrets-config.yaml (kept out of apps/ for the same
+                   CRD-ordering reason).
+    clustersecretstore.yaml   AWS Secrets Manager store, auth via Pod Identity
+    grafana-admin.yaml        Grafana admin credential from Secrets Manager
   kyverno/         Kyverno ClusterPolicy CRs applied by kyverno-policies.yaml
                    (also kept out of apps/ for the same CRD-ordering reason).
     disallow-latest-tag.yaml      (Enforce)
@@ -41,7 +48,7 @@ gitops/
 ```
 
 Components map to ADRs: Karpenter [ADR-0011], observability [ADR-0013], Kyverno
-[ADR-0014]. Next up (Cilium, Backstage) follow the same shape.
+[ADR-0014], External Secrets [ADR-0016]. Next up (Cilium, Backstage) follow the same shape.
 
 ## Adding a component
 

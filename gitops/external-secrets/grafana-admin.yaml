@@ -1,0 +1,28 @@
+# Grafana's admin credential, the first consumer of the secrets pipeline
+# (ADR-0016). Replaces the Terraform-created Kubernetes Secret from ADR-0015:
+# the value now lives in Secrets Manager and ESO materializes it here.
+#
+# The remote key is deterministic (name_prefix/cluster_name), so no account ID
+# appears in Git. Grafana consumes this Secret via admin.existingSecret.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: grafana-admin
+  namespace: monitoring
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore
+  target:
+    name: grafana-admin
+    creationPolicy: Owner
+  data:
+    - secretKey: admin-user
+      remoteRef:
+        key: refplatform/refplatform-dev/grafana-admin
+        property: admin-user
+    - secretKey: admin-password
+      remoteRef:
+        key: refplatform/refplatform-dev/grafana-admin
+        property: admin-password
