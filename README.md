@@ -117,9 +117,41 @@ Management (org root: Organizations, Identity Center, billing only)
 
 ## Getting started
 
-1. Complete the manual bootstrap: [docs/bootstrap.md](docs/bootstrap.md)
-2. Deploy the state backend and GitHub OIDC: `terraform/bootstrap/`
-3. Deploy the organization: `terraform/org/`
+**→ [docs/getting-started.md](docs/getting-started.md)** walks you from fork to a
+running platform and back down to near-zero, with prerequisites, cost at each
+stage, deploy order, verification steps, and where to look when something breaks.
+
+Short version: manual bootstrap ([docs/bootstrap.md](docs/bootstrap.md)) →
+`terraform/bootstrap` → `terraform/org` → Layer 1 stacks → `terraform/eks` →
+`terraform/argocd`. Budget on roughly 60-90 minutes for a first full deploy, most
+of it waiting on AWS.
+
+**Costs:** ~$15-40/month for governance and audit alone; ~$260-285/month with the
+cluster running; back down again on teardown. Deploy the `budgets` stack early.
+
+### Is this what real teams do?
+
+Yes, this is a **landing zone**: the account structure, guardrails, audit trail and
+network backbone an organization builds *before* the first workload ships. It is
+the same class of work a cloud or SRE team does when a company migrates onto AWS,
+and in roughly the same order.
+
+Most teams doing this in production reach for
+**[AWS Control Tower](https://aws.amazon.com/controltower/)**, which automates
+account vending, guardrails, and the log-archive/audit accounts. This repo
+deliberately does not, it builds the same outcomes from raw AWS Organizations and
+Terraform so the mechanics Control Tower hides are visible: why the log archive
+gets its own account, what a guardrail actually is, how delegated administration
+works, why the audit bucket is write-once. The trade-off is written up in
+[ADR-0002](docs/adr/0002-raw-organizations-over-control-tower.md).
+
+If you are doing this for a real company on a deadline, Control Tower is very
+often the right call. Read this to understand what it is doing on your behalf.
+
+Every failure hit while building this is logged with its real error text, root
+cause and fix, in [layer0](docs/layer0-issues.md), [layer1](docs/layer1-issues.md)
+and [layer2](docs/layer2-issues.md) issue logs. Check those first when a deploy
+breaks; the answer is usually already there.
 
 ## License
 

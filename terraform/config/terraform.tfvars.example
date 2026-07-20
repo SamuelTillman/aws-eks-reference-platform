@@ -5,4 +5,6 @@ name_prefix = "refplatform"
 # your backend.hcl bucket. Kept out of git via .gitignore.
 state_bucket = "refplatform-tf-state-<MGMT_ACCOUNT_ID>"
 
-force_destroy_config_bucket = true
+# Leave false. true lets the Config/audit bucket be destroyed with objects in it,
+# which undercuts the ADR-0009 hardening. Set true only for a deliberate teardown.
+force_destroy_config_bucket = false

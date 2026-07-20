@@ -6,7 +6,7 @@ name_prefix = "refplatform"
 state_bucket = "refplatform-tf-state-<MGMT_ACCOUNT_ID>"
 
 # Pin the EKS minor version; upgrades are deliberate, plan-reviewed changes.
-cluster_version = "1.31"
+cluster_version = "1.35"  # keep in STANDARD support; an EOL minor bills at ~6x
 
 # --- API endpoint access (ADR-0007 decision 4) ------------------------------
 # Private access is always on. Add your admin egress IP (/32) to reach the
