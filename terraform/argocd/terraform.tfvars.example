@@ -8,8 +8,8 @@ state_bucket = "refplatform-tf-state-<MGMT_ACCOUNT_ID>"
 # Pin the current chart versions (no defaults on purpose). Find them with:
 #   helm repo add argo https://argoproj.github.io/argo-helm && helm repo update
 #   helm search repo argo/argo-cd argo/argocd-apps --versions | head
-argocd_chart_version      = "7.8.2"
-argocd_apps_chart_version = "2.0.2"
+argocd_chart_version      = "10.1.4"
+argocd_apps_chart_version = "2.0.5"
 
 # GitOps source. Point at your fork if you forked the repo.
 # gitops_repo_url = "https://github.com/<you>/aws-eks-reference-platform.git"
