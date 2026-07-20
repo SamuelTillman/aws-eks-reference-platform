@@ -67,6 +67,11 @@
     color: var(--muted); text-decoration: none; padding: 5px 9px; border-radius: 7px;
   }
   .navlinks a:hover { color: var(--text); background: var(--surface-2); }
+  .navlinks a.cur { color: var(--accent); background: var(--surface-2); }
+  .navinner{max-width:var(--maxw);margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:18px;min-height:52px;flex-wrap:wrap;}
+  .subnav{position:sticky;top:52px;z-index:19;background:color-mix(in srgb,var(--ground) 90%,transparent);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
+  .subnav .navlinks{margin-left:0;}
   .navlinks a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   header.hero { padding: clamp(36px,7vw,72px) 0 20px; }
@@ -170,20 +175,23 @@
 <div class="page">
 
   <nav class="topnav">
-    <div class="wrap">
-      <span class="brand">refplatform / architecture</span>
+    <div class="navinner">
+      <span class="brand">refplatform</span>
       <div class="navlinks">
+        <a href="value-map.html">Value Map</a>
+        <a href="account-landscape.html">Account Landscape</a>
+        <a href="roadmap.html">Roadmap</a>
+        <a href="architecture.html" class="cur" aria-current="page">Architecture</a>
+      </div>
+    </div>
+  </nav>
+  <div class="subnav"><div class="navinner"><div class="navlinks">
         <a href="#layers">Layers</a>
         <a href="#creds">Credential Flow</a>
         <a href="#audit">Audit Trail</a>
         <a href="#network">Networking</a>
         <a href="#eks">EKS Internals</a>
-    <a href="value-map.html">Value Map</a>
-    <a href="account-landscape.html">Account Landscape</a>
-    <a href="roadmap.html">Roadmap</a>
-      </div>
-    </div>
-  </nav>
+      </div></div></div>
 
   <div class="wrap">
 
