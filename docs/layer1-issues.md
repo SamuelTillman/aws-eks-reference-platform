@@ -202,6 +202,32 @@ Services enabled for this platform: `sso`, `cloudtrail`, `guardduty`,
   stuck non-terminal, an in-place `excluded_accounts` update unsticks it where a
   delete cannot.
 
+## 11. Enabling S3 Object Lock on an EXISTING bucket (bucket-replacement trap)
+
+- **Stack:** `terraform/logging`
+- **Risk (caught in plan, never hit):** the obvious way to turn on Object Lock is
+  `object_lock_enabled = true` on `aws_s3_bucket`. That argument is **create-only**,
+  so on an existing bucket Terraform plans a **replacement**, which would have
+  destroyed the audit archive (~15k CloudTrail objects) that Object Lock exists to
+  protect.
+- **Fix:** use the standalone `aws_s3_bucket_object_lock_configuration` resource
+  instead. It calls `PutObjectLockConfiguration` against the live bucket, which AWS
+  permits because versioning was already enabled. The plan was explicitly checked
+  for this before applying: `1 to add, 1 to change, 0 to destroy`, no replacement.
+- **Also worth knowing:**
+  - **Irreversible.** Object Lock cannot be disabled once enabled on a bucket. The
+    `enable_log_object_lock` flag only guards *initial* enablement; setting it false
+    later removes the Terraform config but does not turn the feature off.
+  - **Not retroactive.** Only objects written *after* enablement carry retention;
+    pre-existing objects have none.
+  - GOVERNANCE mode alone is weak, any `s3:*` holder can bypass it. The bucket
+    policy denies `BypassGovernanceRetention` / `DeleteObjectVersion` /
+    `PutObjectRetention` to everyone except `OrganizationAccountAccessRole`, which
+    is what makes it behave like COMPLIANCE for normal principals.
+- **Prevention:** for any irreversible or data-bearing change, read the plan for
+  the word **replaced** before applying. A create-only argument on an existing
+  resource is the classic way to lose data with a one-line diff.
+
 ## Operational notes
 
 - **SSO session expiry vs. background jobs.** A background retry loop for the
@@ -220,3 +246,10 @@ Services enabled for this platform: `sso`, `cloudtrail`, `guardduty`,
 - **Pin the Terraform CLI in CI.** `hashicorp/setup-terraform` defaults to
   `latest`; pin `terraform_version` so runs are reproducible and match the
   version the config is developed and tested against.
+- **Region-less AWS CLI calls get SCP-denied, and it looks like a permissions
+  bug.** A command without `--region` falls back to the shell's default (here
+  us-west-1), which the region-allowlist SCP denies. The error says
+  `AccessDenied ... with an explicit deny in a service control policy`, which reads
+  like a broken IAM policy rather than a missing flag. Hit twice: once querying
+  conformance-pack status, once on `s3api list-buckets`. Always pass
+  `--region us-east-1`.
