@@ -35,11 +35,32 @@ spec:
                 memory: 1Gi
         grafana:
           enabled: true
-          # Chart default admin password; fine for a private, port-forward-only
-          # endpoint. Ingress + SSO is a later increment (ADR-0010 §4).
           defaultDashboardsEnabled: true
           persistence:
             enabled: false
+          # No interactive credential (ADR-0015). The login form is off and
+          # anonymous access is read-only Viewer, so there is no shared password
+          # to distribute or leak. Reaching Grafana at all still requires the
+          # SSO-gated port-forward (Identity Center -> EKS access entry), and the
+          # Service stays ClusterIP.
+          #
+          # Grafana OSS always has an admin user, so instead of the well-known
+          # chart default (prom-operator) it reads a random, per-rebuild password
+          # from a Secret created by the argocd Terraform stack. Never in Git,
+          # never surfaced. See ADR-0015; ADR-0016 replaces this with External
+          # Secrets + Secrets Manager.
+          admin:
+            existingSecret: grafana-admin
+            userKey: admin-user
+            passwordKey: admin-password
+          grafana.ini:
+            auth:
+              disable_login_form: true
+            auth.anonymous:
+              enabled: true
+              org_role: Viewer
+            users:
+              allow_sign_up: false
           resources:
             requests:
               cpu: 50m

@@ -69,9 +69,11 @@ deliberately not done here.
 
 ### 5. Authentication and sync policy
 
-- **Admin:** the built-in ArgoCD admin (initial password in an auto-generated
-  in-cluster secret) to start. **Identity Center (OIDC) SSO** is a later increment,
-  consistent with the platform's zero-stored-credential posture for humans.
+- **Admin:** ~~the built-in ArgoCD admin (initial password in an auto-generated
+  in-cluster secret) to start~~. **Superseded by
+  [ADR-0015](0015-dashboard-access-no-second-credential.md):** the local admin
+  account is disabled entirely and access goes through the kubeconfig-backed
+  `argocd admin dashboard` / `--core`, so no ArgoCD password exists at all.
 - **Sync:** child apps run **automated sync with self-heal and prune** so the
   cluster always matches Git; drift is corrected and deleted manifests are removed.
 

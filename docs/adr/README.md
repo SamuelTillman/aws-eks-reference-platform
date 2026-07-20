@@ -44,3 +44,5 @@ Want the background on the format? See Michael Nygard's original write-up:
 | [0012](0012-permission-boundaries.md) | Permission boundaries on privileged principals (OIDC roles, human SSO sets, service roles) | Accepted |
 | [0013](0013-observability.md) | Cluster observability with kube-prometheus-stack (cheap, ephemeral, GitOps) | Accepted |
 | [0014](0014-policy-kyverno.md) | Admission policy with Kyverno (engine + audit-first starter policies, GitOps) | Accepted |
+| [0015](0015-dashboard-access-no-second-credential.md) | Dashboard access without a second credential (no ArgoCD/Grafana local admins) | Accepted |
+| [0016](0016-platform-secrets-external-secrets.md) | Platform secrets with External Secrets + AWS Secrets Manager (not Vault, and why) | Proposed |

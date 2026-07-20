@@ -103,9 +103,11 @@ have to rediscover any of these. See also
   the client sees nothing. Isolation proof: port-forwarding the *same pod's*
   metrics port 8083 (plain HTTP) returned 200, only the 8080 request over TLS
   reset.
-- **Fix:** use **`http://localhost:8080`** (not https). Login `admin` /
-  (`kubectl -n argocd get secret argocd-initial-admin-secret -o
-  jsonpath='{.data.password}' | base64 -d`).
+- **Fix:** use **`http://localhost:8080`** (not https).
+- **Note (ADR-0015):** the local `admin` account no longer exists, so there is no
+  password and the in-cluster UI has no login path. Use the kubeconfig-backed
+  local dashboard instead: `argocd admin dashboard -n argocd` (or
+  `argocd app list --core`), authenticated as your Identity Center identity.
 - **Prevention:** until an ingress terminates TLS, ArgoCD is HTTP-only over the
   port-forward. A "connection reset by peer" on a healthy pod after an HTTPS
   request is the tell that the listener is plaintext, retry with `http://` before
