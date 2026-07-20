@@ -176,3 +176,44 @@ have to rediscover any of these. See also
   - The cause was described as ServerSideApply/webhook-`caBundle` drift. That was
     a guess and it was wrong.
 
+## 8. External Secrets v2 serves `external-secrets.io/v1`, not `v1beta1`
+
+- **Where:** `gitops/external-secrets/` ([ADR-0016](adr/0016-platform-secrets-external-secrets.md)).
+- **Risk (caught before applying, never hit):** almost every ESO tutorial, blog
+  post and older doc writes `ClusterSecretStore` / `ExternalSecret` as
+  `apiVersion: external-secrets.io/v1beta1`. Against the chart used here
+  (`external-secrets` 2.8.0, app **v1.18.2**) that API is **not served**, so
+  copied manifests fail to apply and the secret never materializes, which then
+  presents as an unrelated Grafana crash-loop waiting for a Secret that will never
+  arrive.
+- **Root cause:** ESO v2 graduated the CRDs to `v1` and dropped `v1beta1` from
+  `servedVersions`.
+- **Fix:** use `external-secrets.io/v1`. Determined by rendering the chart and
+  reading the CRDs directly rather than trusting documentation:
+  ```bash
+  helm template eso external-secrets/external-secrets --version 2.8.0 --include-crds \
+    | yq '. | select(.kind=="CustomResourceDefinition") | .spec.versions[].name'
+  ```
+- **Prevention:** for any operator chart, confirm the **served** CRD apiVersion
+  from the chart itself before writing custom resources against it. Pinned chart
+  versions and copied manifests drift apart silently.
+
+## 9. Secrets Manager soft-delete blocks the next rebuild
+
+- **Where:** `terraform/eks/external-secrets.tf` ([ADR-0016](adr/0016-platform-secrets-external-secrets.md)).
+- **Symptom (anticipated and designed out):** destroying a stack that owns an
+  `aws_secretsmanager_secret`, then rebuilding it, fails with the name
+  *already scheduled for deletion*. The platform is built to be torn down and
+  rebuilt on demand ([ADR-0008](adr/0008-cicd-lifecycle-teardown-rebuild.md)), so
+  this would have broken the rebuild button for 7 to 30 days.
+- **Root cause:** Secrets Manager does not hard-delete. It schedules deletion with
+  a recovery window (default 30 days, minimum 7), and the **secret name stays
+  reserved** for that entire window.
+- **Fix:** `recovery_window_in_days = 0` on secrets owned by a teardown-target
+  stack, which frees the name immediately.
+- **Trade-off:** zero means no accidental-deletion recovery. Correct for a
+  generated, per-rebuild credential; **wrong** for a secret holding something
+  irreplaceable, which belongs in an always-on stack with a normal window instead.
+- **Prevention:** decide per secret whether it is cluster-scoped (rotate freely,
+  window 0) or must outlive a teardown (always-on stack, keep the window).
+
