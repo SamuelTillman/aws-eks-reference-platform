@@ -155,13 +155,13 @@
         <tr>
           <td><div class="cap">Network Isolation</div></td>
           <td class="svc">VPC (per account), Transit Gateway, NAT Gateway, VPC flow logs, interface endpoints</td>
-          <td class="cost">~$110<span style="color:var(--muted)">/mo</span><br><span class="tag">Only While Running</span></td>
+          <td class="cost">~$142<span style="color:var(--muted)">/mo</span><br><span class="tag">Only While Running</span></td>
           <td class="risk">Flat networks and uncontrolled egress. All outbound traffic passes one inspected path and every flow is recorded.</td>
         </tr>
         <tr>
           <td><div class="cap">Compute Platform</div></td>
           <td class="svc">EKS, EC2 Spot, Karpenter autoscaling, EBS (encrypted), ECR</td>
-          <td class="cost">~$135<span style="color:var(--muted)">/mo</span><br><span class="tag">Only While Running</span></td>
+          <td class="cost">~$118<span style="color:var(--muted)">/mo</span><br><span class="tag">Only While Running</span></td>
           <td class="risk">Idle spend and manual scaling. Capacity is bought at spot prices, appears on demand, and is reclaimed automatically when unused.</td>
         </tr>
         <tr>
@@ -186,6 +186,16 @@
     </table>
   </div>
 
+  <div class="callout" style="border-left-color:var(--warn); margin-top:1.75rem">
+    <p><strong>How these numbers are derived.</strong> Calculated from <em>public AWS
+    list pricing</em>, not measured from a bill: Transit Gateway 3 attachments
+    &times; $0.05/hr = $109.50; EKS control plane $0.10/hr = $73.00; 2 spot
+    t3.large &asymp; $36.50; NAT Gateway $0.045/hr = $32.85; 100&nbsp;GB gp3 =
+    $8.00. Data processing and egress are usage-dependent and excluded.
+    <strong>The largest single line is Transit Gateway, not the cluster.</strong>
+    Attaching the currently unused prod VPC alone accounts for ~$36.50/mo.</p>
+  </div>
+
   <div class="callout">
     <p><strong>The controls are enforced, not documented.</strong> Preventive guardrails sit above the
     accounts, so they hold even against an administrator: policy blocks the API calls that would disable
@@ -194,7 +204,7 @@
   </div>
 
   <footer>
-    <p>Figures are steady-state estimates, us-east-1</p>
+    <p>Estimates from public AWS list pricing, us-east-1, 730 hrs</p>
     <nav>
       <a href="architecture.html">Architecture</a><span>/</span>
       <a href="value-map.html">Value Map</a><span>/</span>

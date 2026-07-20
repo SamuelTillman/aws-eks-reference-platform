@@ -43,9 +43,30 @@ built this way", that is where the answer lives.
 
 | State | Cost | Notes |
 |---|---|---|
-| Layer 0 + 1 only (governance, audit, network) | **~$15-40/month** | AWS Config is the largest variable |
+| Layer 0 + 1 only (governance, audit, network) | **~$15-40/month** | usage-based; AWS Config is the largest variable |
 | Plus the EKS cluster running | **~$260-285/month** | Cluster, Transit Gateway, NAT, spot nodes |
 | Torn down (compute destroyed) | **back to ~$15-40/month** | Audit trail is kept on purpose |
+
+These are **estimates from public AWS list pricing** (us-east-1, 730 hrs/month),
+not measured from a bill. Derivation for the running figure:
+
+| Line | Calculation | Monthly |
+|---|---|---|
+| Transit Gateway | 3 VPC attachments x $0.05/hr | $109.50 |
+| EKS control plane | $0.10/hr | $73.00 |
+| EC2 spot, 2 x t3.large | ~$0.025/hr each, spot varies | ~$36.50 |
+| NAT Gateway (single) | $0.045/hr | $32.85 |
+| EBS gp3, 100 GB | $0.08/GB-month | $8.00 |
+
+Data processing and egress are usage-dependent and excluded. **Note that Transit
+Gateway, not the cluster, is the largest single line item.** Most people assume
+the opposite. The prod VPC is attached but runs no workloads, so detaching it
+until you need it saves ~$36.50/month on its own.
+
+> **The $0.10/hr control plane rate applies to a Kubernetes version in
+> *standard* support. An end-of-life version costs $0.60/hr, six times as much,
+> or roughly $438/month instead of $73.** This is why `cluster_version` matters
+> and why the example pins a current minor.
 
 The compute tier is designed to be destroyed and rebuilt on demand
 ([ADR-0008](adr/0008-cicd-lifecycle-teardown-rebuild.md)). **Deploy the budgets
