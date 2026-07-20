@@ -174,10 +174,13 @@
       <span class="brand">refplatform / architecture</span>
       <div class="navlinks">
         <a href="#layers">Layers</a>
-        <a href="#creds">Credential flow</a>
-        <a href="#audit">Audit trail</a>
+        <a href="#creds">Credential Flow</a>
+        <a href="#audit">Audit Trail</a>
         <a href="#network">Networking</a>
-        <a href="#eks">EKS internals</a>
+        <a href="#eks">EKS Internals</a>
+    <a href="value-map.html">Value Map</a>
+    <a href="account-landscape.html">Account Landscape</a>
+    <a href="roadmap.html">Roadmap</a>
       </div>
     </div>
   </nav>
@@ -199,38 +202,38 @@
 
     <!-- ============ LAYERS ============ -->
     <section id="layers">
-      <div class="sec-head"><span class="sec-num">01</span><h2>The layered build</h2></div>
+      <div class="sec-head"><span class="sec-num">01</span><h2>The Layered Build</h2></div>
       <p class="sec-sub">Layer 0 is the foundation; every layer above depends on the one below. Status is encoded in form: solid is live, amber is the foundation increment, dashed is planned.</p>
 
       <div class="stack">
         <div class="layer planned" style="--lh: var(--l5)">
           <div class="spine"><div class="node">5</div></div>
-          <div class="card"><div class="card-top"><div><div class="card-eyebrow">Architecture &amp; FinOps</div><h3>Documentation layer</h3><p class="purpose">Decision log, threat model, and cost dashboard: the evidence the platform works.</p></div><span class="pill planned">Planned</span></div>
+          <div class="card"><div class="card-top"><div><div class="card-eyebrow">Architecture &amp; FinOps</div><h3>Documentation Layer</h3><p class="purpose">Decision log, threat model, and cost dashboard: the evidence the platform works.</p></div><span class="pill planned">Planned</span></div>
             <div class="chips"><span class="chip ghost">ADR log</span><span class="chip ghost">Threat model</span><span class="chip ghost">FinOps dashboard</span></div></div>
         </div>
         <div class="layer planned" style="--lh: var(--l4)">
           <div class="spine"><div class="node">4</div></div>
-          <div class="card"><div class="card-top"><div><div class="card-eyebrow">Sample workload</div><h3>A real app on the platform</h3><p class="purpose">A fictional fishing-charter booking SaaS: proof the platform hosts genuine product, not just infrastructure.</p></div><span class="pill planned">Planned</span></div>
+          <div class="card"><div class="card-top"><div><div class="card-eyebrow">Sample Workload</div><h3>A Real App On The Platform</h3><p class="purpose">A fictional fishing-charter booking SaaS: proof the platform hosts genuine product, not just infrastructure.</p></div><span class="pill planned">Planned</span></div>
             <div class="chips"><span class="chip ghost">Charter SaaS</span><span class="chip ghost">Data pipeline</span><span class="chip ghost">Bedrock RAG</span></div></div>
         </div>
         <div class="layer planned" style="--lh: var(--l3)">
           <div class="spine"><div class="node">3</div></div>
-          <div class="card"><div class="card-top"><div><div class="card-eyebrow">GPU / AI serving</div><h3>Accelerated inference</h3><p class="purpose">GPU capacity and model serving layered onto the cluster for AI/ML workloads.</p></div><span class="pill planned">Planned</span></div>
+          <div class="card"><div class="card-top"><div><div class="card-eyebrow">GPU / AI Serving</div><h3>Accelerated Inference</h3><p class="purpose">GPU capacity and model serving layered onto the cluster for AI/ML workloads.</p></div><span class="pill planned">Planned</span></div>
             <div class="chips"><span class="chip ghost">GPU Operator</span><span class="chip ghost">MIG</span><span class="chip ghost">vLLM</span></div></div>
         </div>
         <div class="layer" style="--lh: var(--l2)">
           <div class="spine"><div class="node">2</div></div>
-          <div class="card"><div class="card-top"><div><div class="card-eyebrow">EKS platform &middot; workloads-dev</div><h3>Kubernetes cluster</h3><p class="purpose">EKS 1.35 with API access entries, Pod Identity, KMS-encrypted secrets, IMDSv2 + encrypted-EBS spot nodes. ArgoCD delivers the platform by GitOps: Karpenter autoscaling, Prometheus/Grafana, and Kyverno policy all ship as Applications. Rebuildable from code to near-zero idle cost.</p></div><span class="pill wip">Foundation + GitOps live</span></div>
+          <div class="card"><div class="card-top"><div><div class="card-eyebrow">EKS platform &middot; workloads-dev</div><h3>Kubernetes Cluster</h3><p class="purpose">EKS 1.35 with API access entries, Pod Identity, KMS-encrypted secrets, IMDSv2 + encrypted-EBS spot nodes. ArgoCD delivers the platform by GitOps: Karpenter autoscaling, Prometheus/Grafana, and Kyverno policy all ship as Applications. Rebuildable from code to near-zero idle cost.</p></div><span class="pill wip">Foundation + GitOps Live</span></div>
             <div class="chips"><span class="chip key">EKS 1.35</span><span class="chip key">Spot nodes</span><span class="chip key">Access entries</span><span class="chip key">Pod Identity</span><span class="chip key">ArgoCD</span><span class="chip key">Karpenter</span><span class="chip key">Prometheus/Grafana</span><span class="chip key">Kyverno</span><span class="chip ghost">Cilium</span><span class="chip ghost">Backstage</span></div></div>
         </div>
         <div class="layer" style="--lh: var(--l1)">
           <div class="spine"><div class="node">1</div></div>
-          <div class="card"><div class="card-top"><div><div class="card-eyebrow">Landing zone</div><h3>Security, audit &amp; networking backbone</h3><p class="purpose">The shared spine every workload inherits: identity, an immutable audit trail, org-wide threat detection, CI/CD identity, and centralized-egress networking.</p></div><span class="pill live">Live</span></div>
+          <div class="card"><div class="card-top"><div><div class="card-eyebrow">Landing Zone</div><h3>Security, Audit &amp; Networking Backbone</h3><p class="purpose">The shared spine every workload inherits: identity, an immutable audit trail, org-wide threat detection, CI/CD identity, and centralized-egress networking.</p></div><span class="pill live">Live</span></div>
             <div class="chips"><span class="chip key">Identity Center SSO</span><span class="chip key">Org CloudTrail</span><span class="chip key">AWS Config + aggregator</span><span class="chip key">GuardDuty</span><span class="chip key">Security Hub</span><span class="chip key">Access Analyzer</span><span class="chip key">Transit Gateway hub</span><span class="chip key">3-AZ VPCs + flow logs</span><span class="chip key">OIDC deploy roles + ECR</span></div></div>
         </div>
         <div class="layer" style="--lh: var(--l0)">
           <div class="spine"><div class="node">0</div></div>
-          <div class="card"><div class="card-top"><div><div class="card-eyebrow">Org bootstrap</div><h3>The foundation</h3><p class="purpose">The organization itself: accounts, OUs, guardrail SCPs, the Terraform state backend, and GitHub OIDC. Everything above is built on this.</p></div><span class="pill live">Live</span></div>
+          <div class="card"><div class="card-top"><div><div class="card-eyebrow">Org Bootstrap</div><h3>The Foundation</h3><p class="purpose">The organization itself: accounts, OUs, guardrail SCPs, the Terraform state backend, and GitHub OIDC. Everything above is built on this.</p></div><span class="pill live">Live</span></div>
             <div class="chips"><span class="chip key">Accounts + OUs</span><span class="chip key">S3 state backend</span><span class="chip key">GitHub OIDC</span><span class="chip key">SCP: deny-root</span><span class="chip key">SCP: region-lock</span><span class="chip key">SCP: deny-disable-audit</span></div></div>
         </div>
       </div>
@@ -238,7 +241,7 @@
 
     <!-- ============ CREDENTIAL FLOW ============ -->
     <section id="creds">
-      <div class="sec-head"><span class="sec-num">02</span><h2>Credential flow: how CI reaches AWS with zero secrets</h2></div>
+      <div class="sec-head"><span class="sec-num">02</span><h2>Credential Flow: How CI Reaches AWS With Zero Secrets</h2></div>
       <p class="sec-sub">A GitHub Action never holds an AWS key. It trades a short-lived OIDC token for a role, then hops one more role into the target account. Every step is logged; nothing outlives the run.</p>
       <div class="figure">
         <div class="flow">
@@ -260,16 +263,16 @@
         </div>
         <p class="caption"><b>No IAM users, no access keys.</b> The only stored value is the state-bucket name, kept as a masked repo secret so the account ID never lands in a public log.</p>
         <div class="notes">
-          <div class="note"><b>Immutable-ID subject</b><p>The trust matches repo:owner@&lt;id&gt;/repo@&lt;id&gt;, so a renamed or namespace-reused repo cannot impersonate this one.</p></div>
-          <div class="note"><b>Two-hop, least standing power</b><p>The federated role holds no keys; member-account access is a second deliberate assume-role, not a standing grant.</p></div>
-          <div class="note"><b>Fork-safe CI</b><p>fmt/validate run for any PR with no credentials; the real cloud plan runs only for same-repo PRs.</p></div>
+          <div class="note"><b>Immutable-ID Subject</b><p>The trust matches repo:owner@&lt;id&gt;/repo@&lt;id&gt;, so a renamed or namespace-reused repo cannot impersonate this one.</p></div>
+          <div class="note"><b>Two-Hop, Least Standing Power</b><p>The federated role holds no keys; member-account access is a second deliberate assume-role, not a standing grant.</p></div>
+          <div class="note"><b>Fork-Safe CI</b><p>fmt/validate run for any PR with no credentials; the real cloud plan runs only for same-repo PRs.</p></div>
         </div>
       </div>
     </section>
 
     <!-- ============ AUDIT ============ -->
     <section id="audit">
-      <div class="sec-head"><span class="sec-num">03</span><h2>Audit trail: every account, one write-isolated archive</h2></div>
+      <div class="sec-head"><span class="sec-num">03</span><h2>Audit Trail: Every Account, One Write-Isolated Archive</h2></div>
       <p class="sec-sub">All five accounts feed a single audit backbone owned by the security account. A workload-account compromise cannot reach or tamper with the evidence, and an SCP stops anyone turning it off.</p>
       <div class="figure">
         <div class="flow">
@@ -294,16 +297,16 @@
         </div>
         <p class="caption"><b>Separation of duties.</b> Audit data lives in a low-privilege account, separate from where workloads run. The org CloudTrail is defined in the management account (org trails must originate there) but writes only to this bucket.</p>
         <div class="notes">
-          <div class="note"><b>SCP: deny-disable-audit</b><p>No workload role, SSO human, or compromised credential can stop CloudTrail or Config, or delete a detector. Only the IaC path is exempt.</p></div>
-          <div class="note"><b>Immutable evidence</b><p>Versioned, TLS-only, non-destroyable, and Object-Lock-ready so historical logs cannot be altered or deleted.</p></div>
-          <div class="note"><b>Delegated administration</b><p>Detection services are administered from the security account, keeping the management account minimal.</p></div>
+          <div class="note"><b>SCP: Deny-Disable-Audit</b><p>No workload role, SSO human, or compromised credential can stop CloudTrail or Config, or delete a detector. Only the IaC path is exempt.</p></div>
+          <div class="note"><b>Immutable Evidence</b><p>Versioned, TLS-only, non-destroyable, and Object-Lock-ready so historical logs cannot be altered or deleted.</p></div>
+          <div class="note"><b>Delegated Administration</b><p>Detection services are administered from the security account, keeping the management account minimal.</p></div>
         </div>
       </div>
     </section>
 
     <!-- ============ NETWORKING ============ -->
     <section id="network">
-      <div class="sec-head"><span class="sec-num">04</span><h2>Networking: centralized-egress hub and spoke</h2></div>
+      <div class="sec-head"><span class="sec-num">04</span><h2>Networking: Centralized-Egress Hub And Spoke</h2></div>
       <p class="sec-sub">Workload VPCs carry no NAT. They default-route to a Transit Gateway, which sends egress through one shared VPC. Dev and prod share the path but have no route to each other.</p>
       <div class="figure">
         <div class="flow">
@@ -324,16 +327,16 @@
         </div>
         <p class="caption"><b>One egress footprint, hard isolation.</b> Centralizing NAT in a single VPC keeps cost and inspection in one place; the TGW route tables ensure dev and prod can reach the internet but never each other.</p>
         <div class="notes">
-          <div class="note"><b>Flow logs to the archive</b><p>Every VPC ships flow logs (all traffic) to the security account's KMS-encrypted store, wired into the same audit backbone.</p></div>
-          <div class="note"><b>Cost lever</b><p>NAT is the largest idle cost. Per-AZ NAT gives HA; a single NAT is a documented dev-cheap option.</p></div>
-          <div class="note"><b>EKS-ready subnets</b><p>Private subnets are sized and tagged for Kubernetes, so the cluster and load balancers discover them with no retagging.</p></div>
+          <div class="note"><b>Flow Logs To The Archive</b><p>Every VPC ships flow logs (all traffic) to the security account's KMS-encrypted store, wired into the same audit backbone.</p></div>
+          <div class="note"><b>Cost Lever</b><p>NAT is the largest idle cost. Per-AZ NAT gives HA; a single NAT is a documented dev-cheap option.</p></div>
+          <div class="note"><b>EKS-Ready Subnets</b><p>Private subnets are sized and tagged for Kubernetes, so the cluster and load balancers discover them with no retagging.</p></div>
         </div>
       </div>
     </section>
 
     <!-- ============ EKS ============ -->
     <section id="eks">
-      <div class="sec-head"><span class="sec-num">05</span><h2>EKS cluster internals</h2></div>
+      <div class="sec-head"><span class="sec-num">05</span><h2>EKS Cluster Internals</h2></div>
       <p class="sec-sub">Inside refplatform-dev: modern auth via access entries (no aws-auth configmap), workload identity via Pod Identity (no node-role sharing), encrypted control plane and nodes.</p>
       <div class="figure">
         <div class="flow wrapy">
@@ -358,17 +361,17 @@
         </div>
         <p class="caption"><b>Modern EKS throughout.</b> Identities are granted with access entries instead of the legacy aws-auth ConfigMap, and workloads get least-privilege IAM through Pod Identity rather than sharing the node instance role.</p>
         <div class="notes">
-          <div class="note"><b>Private-first endpoint</b><p>Private access is always on; public is restricted to an admin CIDR and forbidden from being 0.0.0.0/0. Prod goes fully private.</p></div>
-          <div class="note"><b>Cheap by default</b><p>Spot capacity across several instance types, one-click teardown, and standard-support version to avoid the 6x extended-support rate.</p></div>
-          <div class="note"><b>GitOps-delivered</b><p>ArgoCD app-of-apps drives the platform from Git: Karpenter (spot autoscaling), kube-prometheus-stack (metrics + Grafana), and Kyverno (admission policy) are live increments; Cilium and Backstage are next.</p></div>
-          <div class="note"><b>Defense in depth</b><p>Org SCPs, permission boundaries on every privileged principal, a Config conformance pack attesting the controls, and Kyverno at the admission gate, layered from the org root down to the pod.</p></div>
+          <div class="note"><b>Private-First Endpoint</b><p>Private access is always on; public is restricted to an admin CIDR and forbidden from being 0.0.0.0/0. Prod goes fully private.</p></div>
+          <div class="note"><b>Cheap By Default</b><p>Spot capacity across several instance types, one-click teardown, and standard-support version to avoid the 6x extended-support rate.</p></div>
+          <div class="note"><b>GitOps-Delivered</b><p>ArgoCD app-of-apps drives the platform from Git: Karpenter (spot autoscaling), kube-prometheus-stack (metrics + Grafana), and Kyverno (admission policy) are live increments; Cilium and Backstage are next.</p></div>
+          <div class="note"><b>Defense In Depth</b><p>Org SCPs, permission boundaries on every privileged principal, a Config conformance pack attesting the controls, and Kyverno at the admission gate, layered from the org root down to the pod.</p></div>
         </div>
       </div>
     </section>
 
     <!-- cross-cutting -->
     <section>
-      <div class="sec-head"><span class="sec-num">//</span><h2>Principles at every layer</h2></div>
+      <div class="sec-head"><span class="sec-num">//</span><h2>Principles At Every Layer</h2></div>
       <div class="cross" style="margin-top:16px">
         <div class="cc"><h4><span>[ 01 ]</span> Zero stored credentials</h4><p>SSO for humans, OIDC for CI, Pod Identity for workloads. No IAM users, no access keys, nowhere.</p></div>
         <div class="cc"><h4><span>[ 02 ]</span> Tamper-resistant audit</h4><p>Validated org CloudTrail isolated in the security account, an SCP that forbids disabling it, and TLS-only, non-destroyable buckets.</p></div>

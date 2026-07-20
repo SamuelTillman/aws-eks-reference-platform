@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delivery Roadmap &middot; refplatform</title>
+<meta name="description" content="AWS reference platform, executive view.">
+<style>*{box-sizing:border-box}html,body{margin:0;padding:0}</style>
+</head>
+<body>
+<style>
+  :root {
+    --bg:#0d1b21; --surface:#12262e; --surface-2:#0f2a33; --line:#1e3d47;
+    --text:#e7ebf2; --muted:#93a7b0; --accent:#37b3bf;
+    --done:#46b58a; --now:#d9a441; --next:#5b93cc; --later:#7d8f98;
+    --mono: ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans: ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --maxw:1080px;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f2f6f7; --surface:#fff; --surface-2:#e9f1f3; --line:#d0dee2;
+           --text:#0f2129; --muted:#54707b; --accent:#15707c;
+           --done:#2d8663; --now:#9c6d18; --next:#3a6ea8; --later:#6b7d86; }
+  }
+  :root[data-theme="light"]{ --bg:#f2f6f7; --surface:#fff; --surface-2:#e9f1f3; --line:#d0dee2;
+    --text:#0f2129; --muted:#54707b; --accent:#15707c; --done:#2d8663; --now:#9c6d18; --next:#3a6ea8; --later:#6b7d86; }
+  :root[data-theme="dark"]{ --bg:#0d1b21; --surface:#12262e; --surface-2:#0f2a33; --line:#1e3d47;
+    --text:#e7ebf2; --muted:#93a7b0; --accent:#37b3bf; --done:#46b58a; --now:#d9a441; --next:#5b93cc; --later:#7d8f98; }
+
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:var(--maxw); margin:0 auto; padding:clamp(1.5rem,4vw,3.5rem) clamp(1rem,4vw,2rem) 4rem; }
+  .eyebrow{ font-family:var(--mono); font-size:.7rem; letter-spacing:.18em; text-transform:uppercase; color:var(--accent); margin:0 0 .75rem; }
+  h1{ font-size:clamp(1.75rem,4.5vw,2.6rem); line-height:1.1; margin:0 0 .6rem; letter-spacing:-.02em; text-wrap:balance; font-weight:650; }
+  .lede{ color:var(--muted); max-width:64ch; margin:0 0 2.25rem; font-size:1.02rem; }
+
+  .progress{ display:flex; gap:3px; margin:0 0 .6rem; }
+  .seg{ height:5px; border-radius:2px; flex:1; background:var(--line); }
+  .seg.on{ background:var(--done); }
+  .seg.part{ background:linear-gradient(90deg,var(--done) 78%, var(--line) 78%); }
+  .plabel{ font-family:var(--mono); font-size:.72rem; color:var(--muted); margin:0 0 2.75rem; }
+  .plabel b{ color:var(--done); font-weight:500; }
+
+  h2{ font-size:.78rem; font-family:var(--mono); letter-spacing:.16em; text-transform:uppercase; color:var(--muted);
+      margin:0 0 1.25rem; padding-bottom:.6rem; border-bottom:1px solid var(--line); font-weight:500; }
+
+  .layer{ display:grid; grid-template-columns:auto 1fr; gap:1.25rem; padding-bottom:1.6rem; }
+  .rail{ display:flex; flex-direction:column; align-items:center; }
+  .node{ width:13px; height:13px; border-radius:50%; background:var(--bg); border:2px solid var(--c,var(--later)); flex:none; margin-top:.32rem; }
+  .node.filled{ background:var(--c); }
+  .line{ width:2px; flex:1; background:var(--line); margin:.35rem 0 -.2rem; }
+  .body{ padding-bottom:.2rem; }
+  .lhead{ display:flex; flex-wrap:wrap; gap:.65rem; align-items:baseline; margin-bottom:.3rem; }
+  .lname{ font-size:1.05rem; font-weight:620; }
+  .lnum{ font-family:var(--mono); font-size:.7rem; color:var(--muted); letter-spacing:.1em; }
+  .pill{ font-family:var(--mono); font-size:.62rem; letter-spacing:.1em; text-transform:uppercase;
+         padding:.16rem .5rem; border-radius:2px; border:1px solid var(--c); color:var(--c); }
+  .unlocks{ font-size:.9rem; color:var(--muted); margin:.15rem 0 .7rem; max-width:66ch; }
+  .unlocks b{ color:var(--text); font-weight:600; }
+  .chips{ display:flex; flex-wrap:wrap; gap:.35rem; }
+  .chip{ font-family:var(--mono); font-size:.7rem; padding:.22rem .5rem; border-radius:2px;
+         background:var(--surface); border:1px solid var(--line); color:var(--muted); }
+
+  .open{ margin-top:1rem; background:var(--surface-2); border:1px solid var(--line); border-radius:4px; padding:1.25rem 1.35rem; }
+  .open h3{ margin:0 0 .85rem; font-family:var(--mono); font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:500; }
+  .open ul{ margin:0; padding:0; list-style:none; display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:.7rem 1.5rem; }
+  .open li{ font-size:.87rem; display:flex; gap:.55rem; align-items:baseline; }
+  .open .m{ font-family:var(--mono); font-size:.64rem; color:var(--muted); border:1px solid var(--line);
+            border-radius:2px; padding:.1rem .35rem; flex:none; }
+  .open .t{ color:var(--muted); } .open .t b{ color:var(--text); font-weight:600; }
+
+  footer{ margin-top:3rem; padding-top:1.25rem; border-top:1px solid var(--line);
+          display:flex; flex-wrap:wrap; gap:1.25rem; justify-content:space-between; align-items:center; }
+  footer p{ margin:0; font-family:var(--mono); font-size:.72rem; color:var(--muted); }
+  nav a{ font-family:var(--mono); font-size:.72rem; color:var(--accent); text-decoration:none; border-bottom:1px solid transparent; }
+  nav a:hover{ border-bottom-color:var(--accent); }
+  nav span{ color:var(--muted); font-family:var(--mono); font-size:.72rem; margin:0 .5rem; }
+  a:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">AWS Reference Platform</p>
+  <h1>Delivery Roadmap</h1>
+  <p class="lede">Built in layers, each one usable on its own. Every layer below is deployed, verified
+  against the live platform, and can be rebuilt from source in about twenty-five minutes.</p>
+
+  <div class="progress">
+    <div class="seg on"></div><div class="seg on"></div><div class="seg part"></div><div class="seg"></div>
+  </div>
+  <p class="plabel"><b>Three of four layers complete.</b> Foundation, governance and the application platform are done.</p>
+
+  <h2>Layers</h2>
+
+  <div class="layer" style="--c:var(--done)">
+    <div class="rail"><div class="node filled"></div><div class="line"></div></div>
+    <div class="body">
+      <div class="lhead"><span class="lnum">LAYER 0</span><span class="lname">Foundation</span><span class="pill">Complete</span></div>
+      <p class="unlocks">The organization itself: separate accounts, preventive guardrails, and infrastructure
+      described entirely as code. <b>Unlocks a safe place to build anything else.</b></p>
+      <div class="chips"><span class="chip">Organizations</span><span class="chip">Account separation</span><span class="chip">Guardrail policies</span><span class="chip">Infrastructure as code</span></div>
+    </div>
+  </div>
+
+  <div class="layer" style="--c:var(--done)">
+    <div class="rail"><div class="node filled"></div><div class="line"></div></div>
+    <div class="body">
+      <div class="lhead"><span class="lnum">LAYER 1</span><span class="lname">Governance &amp; Landing Zone</span><span class="pill">Complete</span></div>
+      <p class="unlocks">Sign-in, audit, threat detection and the shared network. <b>Unlocks the ability to
+      pass an audit</b> and to answer who did what, when, with evidence that cannot be edited after the fact.</p>
+      <div class="chips"><span class="chip">Single sign-on</span><span class="chip">Tamper-proof audit trail</span><span class="chip">Continuous compliance</span><span class="chip">Threat detection</span><span class="chip">Network isolation</span></div>
+    </div>
+  </div>
+
+  <div class="layer" style="--c:var(--done)">
+    <div class="rail"><div class="node filled"></div><div class="line"></div></div>
+    <div class="body">
+      <div class="lhead"><span class="lnum">LAYER 2</span><span class="lname">Application Platform</span><span class="pill">Complete</span></div>
+      <p class="unlocks">A Kubernetes platform that scales itself, deploys from Git, enforces policy on every
+      workload, and reports its own health. <b>Unlocks running real applications</b> without a person
+      provisioning servers or holding a password.</p>
+      <div class="chips"><span class="chip">Managed Kubernetes</span><span class="chip">Automatic scaling</span><span class="chip">Discounted capacity</span><span class="chip">Deploy from Git</span><span class="chip">Policy enforcement</span><span class="chip">Monitoring</span><span class="chip">Managed secrets</span></div>
+    </div>
+  </div>
+
+  <div class="layer" style="--c:var(--next)">
+    <div class="rail"><div class="node"></div></div>
+    <div class="body">
+      <div class="lhead"><span class="lnum">LAYER 3</span><span class="lname">Accelerated &amp; AI Workloads</span><span class="pill">Planned</span></div>
+      <p class="unlocks">GPU capacity and model serving layered onto the existing platform. <b>Unlocks AI/ML
+      workloads</b> reusing every control already in place, rather than standing up a parallel environment.</p>
+      <div class="chips"><span class="chip">GPU capacity</span><span class="chip">Model serving</span><span class="chip">Cost controls for accelerators</span></div>
+    </div>
+  </div>
+
+  <div class="open">
+    <h3>Optional Next Steps, In Priority Order</h3>
+    <ul>
+      <li><span class="m">SM</span><span class="t"><b>Sample Application</b> to demonstrate the platform end to end</span></li>
+      <li><span class="m">SM</span><span class="t"><b>Public Access Path</b> for internal dashboards</span></li>
+      <li><span class="m">MD</span><span class="t"><b>Advanced Networking</b> for finer traffic control</span></li>
+      <li><span class="m">MD</span><span class="t"><b>Developer Portal</b> once several teams are onboard</span></li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Status verified against the live platform</p>
+    <nav><a href="architecture.html">Architecture</a><span>/</span>
+      <a href="value-map.html" id="lnk-value">Value Map</a><span>/</span>
+      <a href="account-landscape.html" id="lnk-landscape">Account Landscape</a><span>/</span>
+      <a href="#">Delivery Roadmap</a>
+    </nav>
+  </footer>
+</div>
+
+</body>
+</html>

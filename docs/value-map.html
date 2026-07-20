@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Platform Value Map &middot; refplatform</title>
+<meta name="description" content="AWS reference platform, executive view.">
+<style>*{box-sizing:border-box}html,body{margin:0;padding:0}</style>
+</head>
+<body>
+<style>
+  :root {
+    --bg:#0d1b21; --surface:#12262e; --surface-2:#0f2a33; --line:#1e3d47;
+    --text:#e7ebf2; --muted:#93a7b0; --accent:#37b3bf;
+    --good:#46b58a; --warn:#d9a441; --risk:#d4726a;
+    --mono: ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans: ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --maxw: 1080px;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f2f6f7; --surface:#fff; --surface-2:#e9f1f3; --line:#d0dee2;
+           --text:#0f2129; --muted:#54707b; --accent:#15707c;
+           --good:#2d8663; --warn:#9c6d18; --risk:#ad4f47; }
+  }
+  :root[data-theme="light"]{ --bg:#f2f6f7; --surface:#fff; --surface-2:#e9f1f3; --line:#d0dee2;
+    --text:#0f2129; --muted:#54707b; --accent:#15707c; --good:#2d8663; --warn:#9c6d18; --risk:#ad4f47; }
+  :root[data-theme="dark"]{ --bg:#0d1b21; --surface:#12262e; --surface-2:#0f2a33; --line:#1e3d47;
+    --text:#e7ebf2; --muted:#93a7b0; --accent:#37b3bf; --good:#46b58a; --warn:#d9a441; --risk:#d4726a; }
+
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans);
+        line-height:1.55; -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:var(--maxw); margin:0 auto; padding:clamp(1.5rem,4vw,3.5rem) clamp(1rem,4vw,2rem) 4rem; }
+
+  .eyebrow{ font-family:var(--mono); font-size:.7rem; letter-spacing:.18em; text-transform:uppercase;
+            color:var(--accent); margin:0 0 .75rem; }
+  h1{ font-size:clamp(1.75rem,4.5vw,2.6rem); line-height:1.1; margin:0 0 .6rem; letter-spacing:-.02em;
+      text-wrap:balance; font-weight:650; }
+  .lede{ color:var(--muted); max-width:62ch; margin:0 0 2.5rem; font-size:1.02rem; }
+
+  /* cost band */
+  .band{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1px;
+         background:var(--line); border:1px solid var(--line); border-radius:3px; overflow:hidden; margin-bottom:.75rem; }
+  .stat{ background:var(--surface); padding:1.25rem 1.25rem 1.1rem; }
+  .stat .k{ font-family:var(--mono); font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+  .stat .v{ font-family:var(--mono); font-size:clamp(1.5rem,4vw,2rem); font-variant-numeric:tabular-nums;
+            margin:.45rem 0 .2rem; letter-spacing:-.01em; }
+  .stat .n{ font-size:.82rem; color:var(--muted); }
+  .v.good{ color:var(--good); } .v.warn{ color:var(--warn); } .v.accent{ color:var(--accent); }
+  .bandnote{ font-size:.8rem; color:var(--muted); margin:0 0 2.75rem; font-family:var(--mono); }
+
+  h2{ font-size:.78rem; font-family:var(--mono); letter-spacing:.16em; text-transform:uppercase;
+      color:var(--muted); margin:0 0 1rem; padding-bottom:.6rem; border-bottom:1px solid var(--line); font-weight:500; }
+
+  .scroll{ overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; min-width:660px; }
+  thead th{ font-family:var(--mono); font-size:.66rem; letter-spacing:.12em; text-transform:uppercase;
+            color:var(--muted); text-align:left; font-weight:500; padding:0 .9rem .7rem; }
+  tbody tr{ border-top:1px solid var(--line); }
+  tbody tr:hover{ background:var(--surface); }
+  td{ padding:1rem .9rem; vertical-align:top; }
+  .cap{ font-weight:600; font-size:.98rem; }
+  .svc{ font-family:var(--mono); font-size:.78rem; color:var(--muted); line-height:1.7; }
+  .cost{ font-family:var(--mono); font-variant-numeric:tabular-nums; white-space:nowrap; font-size:.9rem; }
+  .risk{ font-size:.88rem; color:var(--muted); max-width:34ch; }
+  .tag{ display:inline-block; font-family:var(--mono); font-size:.62rem; letter-spacing:.1em;
+        text-transform:uppercase; padding:.18rem .45rem; border-radius:2px; border:1px solid var(--line);
+        color:var(--muted); white-space:nowrap; }
+  .tag.zero{ color:var(--good); border-color:color-mix(in srgb, var(--good) 40%, transparent); }
+  .tag.var{ color:var(--warn); border-color:color-mix(in srgb, var(--warn) 40%, transparent); }
+
+  .callout{ margin-top:2.75rem; border-left:2px solid var(--accent); background:var(--surface);
+            padding:1.1rem 1.25rem; border-radius:0 3px 3px 0; }
+  .callout p{ margin:0; font-size:.92rem; color:var(--muted); }
+  .callout strong{ color:var(--text); }
+
+  footer{ margin-top:3rem; padding-top:1.25rem; border-top:1px solid var(--line);
+          display:flex; flex-wrap:wrap; gap:1.25rem; justify-content:space-between; align-items:center; }
+  footer p{ margin:0; font-family:var(--mono); font-size:.72rem; color:var(--muted); }
+  nav a{ font-family:var(--mono); font-size:.72rem; color:var(--accent); text-decoration:none;
+         border-bottom:1px solid transparent; padding-bottom:1px; }
+  nav a:hover{ border-bottom-color:var(--accent); }
+  nav span{ color:var(--muted); font-family:var(--mono); font-size:.72rem; margin:0 .5rem; }
+  a:focus-visible,tr:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">AWS Reference Platform</p>
+  <h1>Platform Value Map</h1>
+  <p class="lede">What the platform costs, and what each dollar buys down. Grouped by business
+  capability rather than by service, because the services are the means, not the point.</p>
+
+  <div class="band">
+    <div class="stat">
+      <div class="k">Cost When Idle</div>
+      <div class="v good">$15&ndash;40<span style="font-size:.9rem">/mo</span></div>
+      <div class="n">Governance and audit stay on. Compute is destroyed.</div>
+    </div>
+    <div class="stat">
+      <div class="k">Cost When Running</div>
+      <div class="v warn">~$260&ndash;285<span style="font-size:.9rem">/mo</span></div>
+      <div class="n">Adds cluster, Transit Gateway and NAT while in use.</div>
+    </div>
+    <div class="stat">
+      <div class="k">Time To Rebuild</div>
+      <div class="v accent">~25<span style="font-size:.9rem"> min</span></div>
+      <div class="n">One button. Entire platform rebuilt from code.</div>
+    </div>
+  </div>
+  <p class="bandnote">The compute tier is disposable by design: torn down and rebuilt on demand, so idle
+  spend approaches zero without losing the audit trail.</p>
+
+  <h2>Capability Ledger</h2>
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr><th style="width:20%">Capability</th><th style="width:32%">AWS Services</th>
+            <th style="width:16%">Cost</th><th style="width:32%">Risk Retired</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="cap">Governance &amp; Identity</div></td>
+          <td class="svc">Organizations, Service Control Policies, IAM Identity Center, IAM permission boundaries, GitHub OIDC federation</td>
+          <td class="cost"><span class="tag zero">No Charge</span></td>
+          <td class="risk">Shared logins and long-lived access keys. A compromised session cannot mint credentials, disable logging, or leave the organization.</td>
+        </tr>
+        <tr>
+          <td><div class="cap">Audit &amp; Compliance</div></td>
+          <td class="svc">CloudTrail (organization trail), S3 Object Lock, KMS, AWS Config + conformance pack, Security Hub, GuardDuty, IAM Access Analyzer</td>
+          <td class="cost">$15&ndash;40<span style="color:var(--muted)">/mo</span><br><span class="tag var">Largest Variable</span></td>
+          <td class="risk">Undetected change and after-the-fact log tampering. Recent audit records cannot be deleted, even by an administrator.</td>
+        </tr>
+        <tr>
+          <td><div class="cap">Network Isolation</div></td>
+          <td class="svc">VPC (per account), Transit Gateway, NAT Gateway, VPC flow logs, interface endpoints</td>
+          <td class="cost">~$110<span style="color:var(--muted)">/mo</span><br><span class="tag">Only While Running</span></td>
+          <td class="risk">Flat networks and uncontrolled egress. All outbound traffic passes one inspected path and every flow is recorded.</td>
+        </tr>
+        <tr>
+          <td><div class="cap">Compute Platform</div></td>
+          <td class="svc">EKS, EC2 Spot, Karpenter autoscaling, EBS (encrypted), ECR</td>
+          <td class="cost">~$135<span style="color:var(--muted)">/mo</span><br><span class="tag">Only While Running</span></td>
+          <td class="risk">Idle spend and manual scaling. Capacity is bought at spot prices, appears on demand, and is reclaimed automatically when unused.</td>
+        </tr>
+        <tr>
+          <td><div class="cap">Delivery &amp; Policy</div></td>
+          <td class="svc">GitOps delivery (ArgoCD), admission policy (Kyverno), EventBridge, SQS</td>
+          <td class="cost"><span class="tag zero">Negligible</span></td>
+          <td class="risk">Undocumented change. Every deployment is a reviewed commit, and unsafe workloads are rejected before they run.</td>
+        </tr>
+        <tr>
+          <td><div class="cap">Secrets</div></td>
+          <td class="svc">AWS Secrets Manager, External Secrets Operator, EKS Pod Identity</td>
+          <td class="cost">&lt;$1<span style="color:var(--muted)">/mo</span></td>
+          <td class="risk">Credentials in source code. Secrets are IAM-gated, access is logged, and applications receive them without ever storing one.</td>
+        </tr>
+        <tr>
+          <td><div class="cap">Observability &amp; Cost Control</div></td>
+          <td class="svc">Prometheus &amp; Grafana (self-hosted), CloudWatch, AWS Budgets</td>
+          <td class="cost"><span class="tag zero">Negligible</span></td>
+          <td class="risk">Blind operation and surprise bills. Spend is alerted in increments before it becomes a finance conversation.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout">
+    <p><strong>The controls are enforced, not documented.</strong> Preventive guardrails sit above the
+    accounts, so they hold even against an administrator: policy blocks the API calls that would disable
+    logging, permission boundaries cap every privileged role, and the audit archive is write-once.
+    Each of these was verified against the live platform, not assumed.</p>
+  </div>
+
+  <footer>
+    <p>Figures are steady-state estimates, us-east-1</p>
+    <nav><a href="architecture.html">Architecture</a><span>/</span>
+      <a href="#">Value Map</a><span>/</span>
+      <a href="account-landscape.html" id="lnk-landscape">Account Landscape</a><span>/</span>
+      <a href="roadmap.html" id="lnk-roadmap">Delivery Roadmap</a>
+    </nav>
+  </footer>
+</div>
+
+</body>
+</html>

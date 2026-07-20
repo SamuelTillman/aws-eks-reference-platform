@@ -90,7 +90,7 @@ Flat under `terraform/`, one state key per stack (all in the one S3 bucket):
 | `networking` | `networking/terraform.tfstate` | TGW centralized-egress hub, VPCs, flow logs (cross-account) *(Layer 1, done)* |
 | `eks` | `eks/terraform.tfstate` | dev EKS cluster: API-auth access entries, Pod Identity, managed add-ons, system node group (in `workloads-dev`) *(Layer 2, deployed: EKS 1.35, spot, live)* |
 | `budgets` | `budgets/terraform.tfstate` | monthly cost budget + $50-increment spend alerts (mgmt/payer) *(cost, ADR-0008)* |
-| `argocd` | `argocd/terraform.tfstate` | ArgoCD bootstrap + root app-of-apps (Helm, into `workloads-dev`) *(Layer 2, ADR-0010, scaffolded, not yet applied)* |
+| `argocd` | `argocd/terraform.tfstate` | ArgoCD bootstrap + root app-of-apps (Helm, into `workloads-dev`) *(Layer 2, ADR-0010, deployed; also creates the monitoring namespace for External Secrets, ADR-0016)* |
 
 ## Cross-account model (Layer 1+)
 
