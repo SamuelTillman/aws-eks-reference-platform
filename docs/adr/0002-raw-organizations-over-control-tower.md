@@ -2,6 +2,8 @@
 
 **Status:** Accepted · **Date:** 2026-07
 
+> **See also:** [control-tower-comparison.md](../control-tower-comparison.md) maps Control Tower against this repo's deploy steps in detail: what it provisions, what it does not cover, the trade-offs both ways, and AFT as the Terraform bridge.
+
 ## Context
 
 AWS offers two mainstream paths to governance across multiple accounts: Control Tower (with Account Factory / AFT) or AWS Organizations managed directly in Terraform. Control Tower is the common enterprise default.

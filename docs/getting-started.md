@@ -8,10 +8,11 @@ almost nothing.
 
 This is a **landing zone**: the account structure, guardrails, audit trail, and
 network backbone an organization stands up *before* the first workload runs. It
-is the same class of work a cloud/SRE team does during a real migration to AWS,
+is the same class of work a cloud or SRE team does during a real migration to AWS,
 and the order below is roughly the order a real migration follows: get the
 organization and audit trail right first, then network, then compute, then
-delivery.
+delivery. I have done this on a production migration; the sequencing here reflects
+that, not a tutorial's convenience.
 
 **Most teams doing this in production use [AWS Control Tower](https://aws.amazon.com/controltower/),**
 which automates a lot of it: it vends accounts, applies guardrails, sets up the
@@ -23,9 +24,15 @@ actually is (a Service Control Policy), how delegated administration works, why
 the audit bucket is write-once.
 
 The reasoning behind that choice, and what you give up, is in
-[ADR-0002](adr/0002-raw-organizations-over-control-tower.md). If you are doing this
-for a real company on a deadline, Control Tower is very often the right answer.
-Read this repo to understand what it is doing for you.
+[ADR-0002](adr/0002-raw-organizations-over-control-tower.md). For a step-by-step
+mapping of **which of the steps below Control Tower would have done for you**, and
+which you would build either way, see
+**[control-tower-comparison.md](control-tower-comparison.md)**. Short version: it
+covers account structure, guardrails, centralized logging and identity. The
+network, the cluster, and delivery are yours regardless.
+
+If you are doing this for a real company on a deadline, Control Tower is very often
+the right answer. Read this repo to understand what it is doing for you.
 
 Every significant decision here has an [ADR](adr/). When you wonder "why is it
 built this way", that is where the answer lives.
