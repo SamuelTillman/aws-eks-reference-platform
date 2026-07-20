@@ -96,7 +96,7 @@ the EKS cluster internals), see the **[architecture page](https://samueltillman.
 
 ## Design principles
 
-1. **Zero stored credentials.** GitHub Actions authenticates to AWS via OIDC. Workloads use IAM roles. Humans use IAM Identity Center SSO. There aren't any IAM users or access keys anywhere in this organization.
+1. **Zero stored AWS credentials.** GitHub Actions authenticates to AWS via OIDC. Workloads use Pod Identity. Humans use IAM Identity Center SSO. There aren't any IAM users or access keys anywhere in this organization, and the permission boundary makes `iam:CreateAccessKey` an explicit deny even for an administrator. *Application* secrets are a separate concern: where a workload genuinely needs one, it lives in AWS Secrets Manager and is delivered over Pod Identity, never committed and never a default ([ADR-0016](docs/adr/0016-platform-secrets-external-secrets.md)).
 2. **Everything is code.** The only manual steps are the unavoidable bootstrap that creates the organization, documented honestly in [docs/bootstrap.md](docs/bootstrap.md).
 3. **Forkable by design.** Account IDs, domains, and values specific to your org are variables. Fork it, set your values, deploy your own.
 4. **Costs stay capped.** Spot capacity, scale to zero, and a documented destroy and rebuild flow. If it can't be rebuilt from this repo, it doesn't belong in this repo.

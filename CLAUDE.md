@@ -12,9 +12,18 @@ EKS → GPU/AI), built in layers. See [README.md](README.md) for the layer map a
 
 ## Hard rules (do not break)
 
-- **Zero stored credentials.** Humans use IAM Identity Center SSO; CI uses GitHub
-  OIDC; workloads use IAM roles. Never create IAM users or access keys, and never
-  introduce a credential that outlives a session.
+- **Zero stored AWS credentials.** Humans use IAM Identity Center SSO; CI uses
+  GitHub OIDC; workloads use Pod Identity / IAM roles; cross-account is
+  `AssumeRole`. Never create IAM users or access keys. Every path into AWS must be
+  a temporary, federated credential, and the permission boundary (ADR-0012)
+  enforces this: `iam:CreateAccessKey` is an explicit deny even for admins.
+- **Application secrets are managed, not absent.** Some workloads genuinely
+  require a secret (Grafana mandates an admin user; it cannot be disabled). Those
+  live in AWS Secrets Manager and are delivered by External Secrets over Pod
+  Identity ([ADR-0016](docs/adr/0016-platform-secrets-external-secrets.md)):
+  never in Git, never a chart default, IAM-gated, CloudTrail-audited, rotatable.
+  The rule is **"no long-lived AWS credential, and no secret in source control"**,
+  not "no secret exists anywhere". Do not claim the stronger version.
 - **Never commit:** `*.tfvars`, `backend.hcl`, state files, or **account IDs**
   (use `<MGMT_ACCOUNT_ID>`-style placeholders in tracked files). These are
   gitignored, keep it that way. **Scan `git diff --cached` for 12-digit IDs and

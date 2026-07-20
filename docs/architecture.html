@@ -381,7 +381,7 @@
     <section>
       <div class="sec-head"><span class="sec-num">//</span><h2>Principles At Every Layer</h2></div>
       <div class="cross" style="margin-top:16px">
-        <div class="cc"><h4><span>[ 01 ]</span> Zero stored credentials</h4><p>SSO for humans, OIDC for CI, Pod Identity for workloads. No IAM users, no access keys, nowhere.</p></div>
+        <div class="cc"><h4><span>[ 01 ]</span> Zero stored AWS credentials</h4><p>SSO for humans, OIDC for CI, Pod Identity for workloads. No IAM users, no access keys, nowhere. Application secrets, where a workload truly needs one, live in Secrets Manager and are fetched over Pod Identity.</p></div>
         <div class="cc"><h4><span>[ 02 ]</span> Tamper-resistant audit</h4><p>Validated org CloudTrail isolated in the security account, an SCP that forbids disabling it, and TLS-only, non-destroyable buckets.</p></div>
         <div class="cc"><h4><span>[ 03 ]</span> Cheap &amp; destroyable</h4><p>Spot capacity, per-flag paid services, one-click teardown/rebuild, and $50-increment budget alarms. Idle cost trends to near-zero.</p></div>
       </div>
