@@ -46,3 +46,4 @@ Want the background on the format? See Michael Nygard's original write-up:
 | [0014](0014-policy-kyverno.md) | Admission policy with Kyverno (engine + audit-first starter policies, GitOps) | Accepted |
 | [0015](0015-dashboard-access-no-second-credential.md) | Dashboard access without a second credential (no ArgoCD/Grafana local admins) | Accepted |
 | [0016](0016-platform-secrets-external-secrets.md) | Platform secrets with External Secrets + AWS Secrets Manager (not Vault, and why) | Proposed |
+| [0017](0017-s3-object-lock-audit-trail.md) | S3 Object Lock (WORM) on the audit trail, GOVERNANCE + policy-denied bypass | Accepted |

@@ -26,3 +26,33 @@ variable "force_destroy_logs" {
   type        = bool
   default     = false
 }
+
+# --- S3 Object Lock (ADR-0017) ----------------------------------------------
+
+variable "enable_log_object_lock" {
+  description = "Enable S3 Object Lock (WORM) on the audit-log bucket. IRREVERSIBLE: Object Lock cannot be turned off once enabled on a bucket."
+  type        = bool
+  default     = true
+}
+
+variable "log_object_lock_mode" {
+  description = "Object Lock retention mode. GOVERNANCE (default) blocks deletion for anyone without s3:BypassGovernanceRetention, which the bucket policy denies, leaving a deliberate break-glass path. COMPLIANCE is absolute: not even root can delete before expiry, and it cannot be shortened. Use COMPLIANCE only when a regulator requires it."
+  type        = string
+  default     = "GOVERNANCE"
+
+  validation {
+    condition     = contains(["GOVERNANCE", "COMPLIANCE"], var.log_object_lock_mode)
+    error_message = "log_object_lock_mode must be GOVERNANCE or COMPLIANCE."
+  }
+}
+
+variable "log_object_lock_days" {
+  description = "Default retention in days applied to every new audit object. Deliberately short for a reference platform (locked objects cannot be deleted for this long); a real audit trail would use 365+."
+  type        = number
+  default     = 7
+
+  validation {
+    condition     = var.log_object_lock_days > 0
+    error_message = "log_object_lock_days must be greater than 0."
+  }
+}

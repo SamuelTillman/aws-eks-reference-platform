@@ -127,6 +127,34 @@ data "aws_iam_policy_document" "log_bucket" {
     }
   }
 
+  # Object Lock is GOVERNANCE mode (ADR-0017), which by itself any admin holding
+  # s3:* could bypass. Deny the bypass (and version deletion) for everyone except
+  # the OrganizationAccountAccessRole, so GOVERNANCE behaves like COMPLIANCE for
+  # every normal principal while keeping one deliberate, audited break-glass path.
+  # Same exemption pattern as the deny-disable-audit SCP.
+  dynamic "statement" {
+    for_each = var.enable_log_object_lock ? [1] : []
+    content {
+      sid    = "DenyObjectLockBypassExceptBreakGlass"
+      effect = "Deny"
+      actions = [
+        "s3:BypassGovernanceRetention",
+        "s3:DeleteObjectVersion",
+        "s3:PutObjectRetention",
+      ]
+      resources = ["${aws_s3_bucket.logs.arn}/*"]
+      principals {
+        type        = "*"
+        identifiers = ["*"]
+      }
+      condition {
+        test     = "ArnNotLike"
+        variable = "aws:PrincipalArn"
+        values   = ["arn:aws:iam::*:role/OrganizationAccountAccessRole"]
+      }
+    }
+  }
+
   statement {
     sid       = "AWSCloudTrailAclCheck"
     effect    = "Allow"
