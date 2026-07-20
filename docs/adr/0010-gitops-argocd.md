@@ -2,9 +2,14 @@
 
 **Status:** Accepted · **Date:** 2026-07
 
-> **Implementation status:** Decision only. This ADR fixes how platform software
-> is delivered to the cluster; the ArgoCD install and the first managed apps are
-> the next increment.
+> **Implementation status:** Implemented. ArgoCD is bootstrapped by
+> `terraform/argocd` with the root app-of-apps, and everything above the cluster is
+> now delivered through it: Karpenter ([ADR-0011](0011-karpenter-autoscaling.md)),
+> observability ([ADR-0013](0013-observability.md)), Kyverno
+> ([ADR-0014](0014-policy-kyverno.md)) and External Secrets
+> ([ADR-0016](0016-platform-secrets-external-secrets.md)). Like the cluster it runs
+> on, it is deployed and destroyed on demand
+> ([ADR-0008](0008-cicd-lifecycle-teardown-rebuild.md)).
 
 ## Context
 

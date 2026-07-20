@@ -2,13 +2,18 @@
 
 **Status:** Accepted · **Date:** 2026-07
 
-> **Implementation status:** Scaffolded in `terraform/eks`, not yet deployed
-> (`validate` passes; no `apply` has run, standing cost is still zero). This ADR
-> scopes the **first Layer 2 increment**, a single working EKS cluster in
-> `workloads-dev` that later
-> increments (Cilium, GitOps, observability, policy, Backstage) build on. Each of
-> those is its own ADR/increment; this one deliberately stops at "a cluster you
-> can deploy to."
+> **Implementation status:** Implemented and verified live. `refplatform-dev` has
+> been deployed, verified (EKS 1.35, spot system node group) and destroyed
+> repeatedly through the lifecycle button. Read that as **proven, not currently
+> running**: the cluster is stood up on demand and torn back down to near-zero
+> ([ADR-0008](0008-cicd-lifecycle-teardown-rebuild.md)), so this ADR deliberately
+> does not assert a runtime state. This ADR scopes the **first Layer 2 increment**,
+> a single working EKS cluster in `workloads-dev`. The increments built on top of
+> it have since been delivered: GitOps ([ADR-0010](0010-gitops-argocd.md)),
+> autoscaling ([ADR-0011](0011-karpenter-autoscaling.md)), observability
+> ([ADR-0013](0013-observability.md)), policy ([ADR-0014](0014-policy-kyverno.md))
+> and secrets ([ADR-0016](0016-platform-secrets-external-secrets.md)). Cilium and
+> Backstage remain open.
 
 ## Context
 

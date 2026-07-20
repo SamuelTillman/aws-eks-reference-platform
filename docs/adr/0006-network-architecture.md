@@ -2,12 +2,21 @@
 
 **Status:** Accepted · **Date:** 2026-07
 
-> **Implementation status:** Deployed, 3 VPCs, centralized per-AZ NAT, the
+> **Implementation status:** Implemented and verified live (deployed and destroyed
+> on demand, [ADR-0008](0008-cicd-lifecycle-teardown-rebuild.md), so this is not a
+> claim about what is running right now). 3 VPCs, the
 > Transit Gateway hub, all attachments, full dev/prod segmentation routing,
 > gateway endpoints (S3/DynamoDB), and **VPC Flow Logs** to a dedicated archive
 > (see §Observability). **Interface endpoints** (ECR/STS/CloudWatch Logs) are
 > implemented but **off by default** (`enable_interface_endpoints = false`), a
 > flat hourly per-AZ cost that's only needed once EKS nodes run in Layer 2.
+>
+> **NAT tier:** the module defaults to **one NAT per AZ** (`egress_single_nat =
+> false`), which is the production-shaped choice. This reference environment
+> deliberately overrides it to a **single NAT** (the lifecycle workflow passes
+> `-var egress_single_nat=true`), trading AZ-redundant egress for roughly two
+> thirds off the NAT bill. Cost figures published for this platform assume the
+> single-NAT deployment.
 
 ## Context
 
