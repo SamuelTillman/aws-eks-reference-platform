@@ -158,28 +158,41 @@ have to rediscover any of these. See also
   the controller log for `AccessDenied` after the first apply, not just by
   checking that a node launches.
 
-## 7. ArgoCD shows Helm apps `OutOfSync` (and briefly `Degraded`) while Healthy
+## 7. Kyverno app sits `OutOfSync` while `Healthy` (unresolved, cosmetic)
 
-- **Where:** the `kube-prometheus-stack` and `kyverno` Applications after a
-  rebuild.
-- **Symptom:** apps sit at `OutOfSync` indefinitely while reporting `Healthy`, and
-  during the first minute or two of a rebuild they can flash `Degraded` or
-  `Missing`. The `root` app also flips between `Synced` and `OutOfSync`. Nothing is
-  actually broken: pods run, Grafana serves, Kyverno admits and blocks.
-- **Root cause:** two separate, benign effects.
-  1. **Startup ordering.** `Degraded`/`Missing` in the first minutes is just the
-     chart still installing (CRDs, webhooks, pods not yet ready). It clears on its
-     own; do not chase it.
-  2. **Server-side-apply field drift.** Both charts are synced with
-     `ServerSideApply=true` (needed, their CRDs exceed the client-side
-     last-applied-annotation limit). Their own operators and webhooks then mutate
-     fields on the objects they own (webhook `caBundle`, defaulted fields), so
-     ArgoCD's desired-vs-live diff never reaches zero. With `selfHeal` on, ArgoCD
-     harmlessly re-applies; it does not fight the operator.
-- **Fix:** none required. It is cosmetic. If the noise matters, add
-  `ignoreDifferences` entries to the Application for the specific
-  operator-managed fields (e.g. webhook `caBundle`) rather than turning off
-  ServerSideApply, which would break the CRD apply.
-- **Prevention:** judge these components by **Health** and real behavior, not by
-  `Sync` status. Wait ~2 minutes after a rebuild before reading any of it; the
-  first status you see is almost always mid-install.
+- **Where:** the `kyverno` Application after a rebuild. (Earlier drafts of this
+  entry also blamed `kube-prometheus-stack` and `external-secrets`; that was
+  wrong, see "corrections" below.)
+- **Symptom:** `kyverno` reports `OutOfSync` indefinitely while `Healthy`. Eleven
+  `CustomResourceDefinition` resources are listed as the OutOfSync members. The
+  engine works: pods run, policies are Ready, and admission enforcement provably
+  blocks a `:latest` pod.
+- **What was actually measured** (rather than assumed):
+  - The live CRD has `spec.conversion: {strategy: None}`; the chart ships the CRD
+    with **no `spec.conversion` field at all**. The API server defaults it.
+  - A full structural comparison of chart-rendered CRD vs live CRD found
+    `/spec/conversion` to be the **only** difference.
+  - The CRDs use `conversion strategy: None`, so webhook `caBundle` injection is
+    **not** involved (an earlier draft of this entry claimed it was).
+- **Fixes attempted and REVERTED, both failed:**
+  1. `ignoreDifferences` on `/spec/conversion` for `CustomResourceDefinition`.
+     Confirmed the rule landed on the in-cluster Application; status unchanged
+     through a hard refresh.
+  2. Additionally `RespectIgnoreDifferences=true` in `syncOptions` (the documented
+     way to make `ignoreDifferences` count toward sync status rather than just the
+     diff view). Confirmed the option landed; status still unchanged.
+- **Status: unresolved and deliberately left alone.** It is cosmetic: the
+  component is Healthy and functionally verified. Something beyond the one
+  structural field is driving ArgoCD's diff for these large CRDs, and it was not
+  worth more cluster time to chase. The reverted attempts are recorded here so the
+  next person does not repeat them.
+- **Prevention / guidance:** judge these components by **Health and real
+  behavior, not Sync status**, and wait ~2 minutes after a rebuild before reading
+  any status at all; the first thing you see is almost always mid-install.
+- **Corrections to earlier versions of this entry** (kept visible on purpose):
+  - `kube-prometheus-stack` and `external-secrets` were described as persistently
+    OutOfSync/Degraded. They are **not**. Both settle to `Synced`/`Healthy`; what
+    was observed was transient install state (CRDs, webhook certs, pods starting).
+  - The cause was described as ServerSideApply/webhook-`caBundle` drift. That was
+    a guess and it was wrong.
+
