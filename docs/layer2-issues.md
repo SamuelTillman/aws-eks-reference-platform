@@ -157,3 +157,29 @@ have to rediscover any of these. See also
   `ListInstanceProfiles`) even if you drop the management ones. Verify by tailing
   the controller log for `AccessDenied` after the first apply, not just by
   checking that a node launches.
+
+## 7. ArgoCD shows Helm apps `OutOfSync` (and briefly `Degraded`) while Healthy
+
+- **Where:** the `kube-prometheus-stack` and `kyverno` Applications after a
+  rebuild.
+- **Symptom:** apps sit at `OutOfSync` indefinitely while reporting `Healthy`, and
+  during the first minute or two of a rebuild they can flash `Degraded` or
+  `Missing`. The `root` app also flips between `Synced` and `OutOfSync`. Nothing is
+  actually broken: pods run, Grafana serves, Kyverno admits and blocks.
+- **Root cause:** two separate, benign effects.
+  1. **Startup ordering.** `Degraded`/`Missing` in the first minutes is just the
+     chart still installing (CRDs, webhooks, pods not yet ready). It clears on its
+     own; do not chase it.
+  2. **Server-side-apply field drift.** Both charts are synced with
+     `ServerSideApply=true` (needed, their CRDs exceed the client-side
+     last-applied-annotation limit). Their own operators and webhooks then mutate
+     fields on the objects they own (webhook `caBundle`, defaulted fields), so
+     ArgoCD's desired-vs-live diff never reaches zero. With `selfHeal` on, ArgoCD
+     harmlessly re-applies; it does not fight the operator.
+- **Fix:** none required. It is cosmetic. If the noise matters, add
+  `ignoreDifferences` entries to the Application for the specific
+  operator-managed fields (e.g. webhook `caBundle`) rather than turning off
+  ServerSideApply, which would break the CRD apply.
+- **Prevention:** judge these components by **Health** and real behavior, not by
+  `Sync` status. Wait ~2 minutes after a rebuild before reading any of it; the
+  first status you see is almost always mid-install.

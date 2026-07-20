@@ -49,12 +49,17 @@ last-applied-annotation size limit, server-side apply is the standard fix.
   wire SNS/Slack) when there is something to page.
 - **node-exporter + kube-state-metrics stay on**, they are the actual signal.
 
-### 3. It also exercises Karpenter
+### 3. Footprint (corrected after measuring)
 
-Prometheus's footprint typically will not fit on the two small system nodes
-alongside ArgoCD and Karpenter, so scheduling it makes Karpenter provision a spot
-node, then consolidate it away on teardown. The observability install is thus a
-live end-to-end test of autoscaling, not just a dashboard.
+The original draft of this ADR predicted the stack would not fit on the two small
+system nodes and would therefore make Karpenter provision a spot node, doubling as
+a live autoscaling test. **That turned out to be wrong**: across two full rebuilds
+the whole stack (Prometheus, Grafana, operator, kube-state-metrics, node-exporters)
+scheduled onto the existing 2-node system tier and Karpenter provisioned
+**nothing**. Recorded here rather than quietly edited, because the cheap-tier
+sizing working better than predicted is the useful result: observability costs no
+extra nodes at this scale. Karpenter's autoscaling is verified separately with a
+deliberate workload (ADR-0011).
 
 ### 4. Reaching Grafana
 
