@@ -143,7 +143,10 @@ deliberately does not, it builds the same outcomes from raw AWS Organizations an
 Terraform so the mechanics Control Tower hides are visible: why the log archive
 gets its own account, what a guardrail actually is, how delegated administration
 works, why the audit bucket is write-once. The trade-off is written up in
-[ADR-0002](docs/adr/0002-raw-organizations-over-control-tower.md).
+[ADR-0002](docs/adr/0002-raw-organizations-over-control-tower.md), and
+[docs/control-tower-comparison.md](docs/control-tower-comparison.md) maps Control
+Tower against every deploy step: what it automates, what it does not, and when to
+pick which.
 
 If you are doing this for a real company on a deadline, Control Tower is very
 often the right call. Read this to understand what it is doing on your behalf.
