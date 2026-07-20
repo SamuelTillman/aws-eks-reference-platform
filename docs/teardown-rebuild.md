@@ -78,3 +78,14 @@ See [layer2-issues.md](layer2-issues.md) #4. In short: assume the workloads-dev
 `OrganizationAccountAccessRole`, export the temporary creds, then
 `aws eks update-kubeconfig --name refplatform-dev --region us-east-1` (without
 `--role-arn`) and `kubectl get nodes`.
+
+### Reaching the dashboards (no passwords, ADR-0015)
+
+Neither dashboard has a local admin account; both ride your SSO identity.
+
+- **ArgoCD:** `argocd admin dashboard -n argocd`, a local UI authenticated by your
+  kubeconfig (Identity Center -> EKS access entry). CLI equivalent:
+  `argocd app list --core`. The in-cluster UI has no login path by design.
+- **Grafana:** `kubectl -n monitoring port-forward svc/kube-prometheus-stack-grafana 3000:80`
+  then **http://localhost:3000** (plain http). No login: anonymous read-only
+  Viewer, so there is nothing to type and nothing to leak.
