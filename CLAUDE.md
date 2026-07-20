@@ -34,6 +34,12 @@ EKS → GPU/AI), built in layers. See [README.md](README.md) for the layer map a
 - **Never touch** the management-account root, IAM Identity Center *enablement*,
   or billing settings by automation, those are documented manual bootstrap
   steps ([docs/bootstrap.md](docs/bootstrap.md)).
+- **`docs/` is the single source of truth for anything published.** GitHub Pages
+  serves it directly. Do not create a second hosted copy of a page; if you publish
+  elsewhere, publish a **pointer** that links back to
+  `https://samueltillman.github.io/aws-eks-reference-platform/`. Duplicated pages
+  drifted within a day once already (a corrected cost split landed in the repo
+  while the shared copy still showed the old figures).
 - **Decisions get an ADR** in `docs/adr/`, numbered sequentially. Update the
   index table in [docs/adr/README.md](docs/adr/README.md).
 - **Log issues as you hit them.** Every non-trivial deploy or operational issue
