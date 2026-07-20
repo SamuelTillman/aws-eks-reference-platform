@@ -1,9 +1,10 @@
 # ADR-0016: Platform secrets with External Secrets + AWS Secrets Manager
 
-**Status:** Proposed · **Date:** 2026-07
+**Status:** Accepted · **Date:** 2026-07
 
-> **Implementation status:** Planned increment, not built. Scoped here so the
-> decision and its rationale exist before the first workload needs a secret.
+> **Implementation status:** Implemented. ESO runs as a GitOps component reading
+> AWS Secrets Manager over EKS Pod Identity, with Grafana's admin credential as
+> the first consumer (replacing the ADR-0015 Terraform stopgap).
 
 ## Context
 
@@ -68,6 +69,25 @@ one-line change.
 Grafana. Its `random_password` stopgap from ADR-0015 is replaced by a Secrets
 Manager secret plus an `ExternalSecret`, proving the pattern end to end on
 something low-risk before real workloads depend on it.
+
+### 5. Two things worth knowing, learned building it
+
+- **`recovery_window_in_days = 0` is load-bearing.** Secrets Manager soft-deletes
+  by default (7 to 30 days), during which the *name stays reserved*. On a platform
+  designed to be destroyed and rebuilt, the default would make the next rebuild
+  fail with "already scheduled for deletion". Zero frees the name immediately.
+- **ESO v2 serves `external-secrets.io/v1`,** not the `v1beta1` that most
+  tutorials and older docs still show. Manifests copied from those fail against
+  this chart version.
+
+### 6. Where secrets live
+
+This first secret is **cluster-scoped** (Grafana's admin) and so is defined with
+the cluster, rotating on each rebuild, which is fine for a generated credential
+nobody memorizes. Secrets that must genuinely **outlive** a teardown (third-party
+API keys, database credentials) belong in an always-on stack; the same
+`ClusterSecretStore` reads them, since it is scoped to the whole
+`<name_prefix>/<cluster>` prefix rather than to individual secrets.
 
 ## Consequences
 
