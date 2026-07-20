@@ -37,3 +37,6 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+      # Required for ignoreDifferences to count toward SYNC STATUS, not just the
+      # diff view. Without it the app stays OutOfSync despite the ignore rule.
+      - RespectIgnoreDifferences=true
