@@ -20,6 +20,16 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: kyverno
+  # The chart ships CRDs with no `spec.conversion`; the API server defaults it to
+  # {strategy: None}. ArgoCD then diffs "absent" against "defaulted" and reports
+  # the app OutOfSync forever while it is perfectly Healthy. Ignore that one
+  # server-defaulted field rather than disabling ServerSideApply, which these
+  # large CRDs require. See layer2-issues #7.
+  ignoreDifferences:
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      jsonPointers:
+        - /spec/conversion
   syncPolicy:
     automated:
       prune: true
