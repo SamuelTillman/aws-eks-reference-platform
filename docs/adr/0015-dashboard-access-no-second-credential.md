@@ -89,12 +89,21 @@ near-zero idle cost ([ADR-0008](0008-cicd-lifecycle-teardown-rebuild.md)).
   no shared password exists anywhere in the cluster.
 - Access is unchanged in convenience (still a port-forward or the local
   dashboard) and strictly better in security (one identity system, SSO-governed).
-- **Residual, stated plainly:** Grafana's chart still provisions an admin user
-  that its HTTP API would accept over basic auth. The login form is off, the
-  Service is ClusterIP, and reaching it requires an SSO-gated tunnel, so the
-  practical exposure is small, but it is not zero. Eliminating it properly needs a
-  secret store (External Secrets + Secrets Manager) or Amazon Managed Grafana
-  (native Identity Center), both deferred.
+- **Residual, stated plainly:** Grafana OSS **requires** an admin user; it cannot
+  be disabled, and its HTTP API accepts that user over basic auth. So this is a
+  managed credential, not an absent one. What is removed is the part that actually
+  mattered, the **well-known chart default** (`prom-operator`): the password is now
+  a random 32-char value generated per rebuild by the `argocd` stack and delivered
+  via `admin.existingSecret`. It is never in Git and never surfaced; it does live
+  in Terraform state (encrypted, access-controlled S3), an accepted trade.
+  Combined with the disabled login form, ClusterIP Service, and SSO-gated tunnel,
+  the credential is inert in practice.
+- **Note on secret stores:** moving this password into AWS Secrets Manager or
+  HashiCorp Vault would **not** eliminate the credential either, Grafana still
+  needs an admin. What a secret store adds is rotation, IAM/policy-gated
+  retrieval, and a single place to audit access. That is worth doing, but on
+  platform-secrets grounds rather than for this one password, hence
+  [ADR-0016](0016-platform-secrets-external-secrets.md) as its own increment.
 - If a real ingress arrives later, wiring genuine SSO becomes easy and is the
   natural upgrade: ArgoCD via Dex's SAML connector to Identity Center (with
   Identity Center **groups mapped to ArgoCD RBAC roles**), Grafana via an OIDC
